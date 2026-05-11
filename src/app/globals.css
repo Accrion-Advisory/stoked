@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Satoshi:wght@400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-base: #0A0B0F;
+  --bg-surface: #111318;
+  --bg-elevated: #171A20;
+  --bg-overlay: #1E2128;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --text-primary: #F4F6FA;
+  --text-secondary: #8B93A7;
+  --text-tertiary: #4A5168;
+  --green: #21D07A;
+  --green-dim: rgba(33, 208, 122, 0.12);
+  --red: #FF5C7A;
+  --red-dim: rgba(255, 92, 122, 0.12);
+  --blue: #5B8CFF;
+  --blue-dim: rgba(91, 140, 255, 0.12);
+  --gold: #F6C453;
+  --gold-dim: rgba(246, 196, 83, 0.12);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html {
+  font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+body {
+  background: var(--bg-base);
+  min-height: 100dvh;
+  max-width: 430px;
+  margin: 0 auto;
+  position: relative;
+}
+
+::-webkit-scrollbar { width: 0; background: transparent; }
+
+@layer utilities {
+  .bg-base { background: var(--bg-base); }
+  .bg-surface { background: var(--bg-surface); }
+  .bg-elevated { background: var(--bg-elevated); }
+  .border-subtle { border-color: var(--border); }
+  .border-strong-c { border-color: var(--border-strong); }
+  .text-primary { color: var(--text-primary); }
+  .text-secondary { color: var(--text-secondary); }
+  .text-tertiary { color: var(--text-tertiary); }
+  .text-green-stoked { color: var(--green); }
+  .text-red-stoked { color: var(--red); }
+  .text-blue-stoked { color: var(--blue); }
+  .text-gold { color: var(--gold); }
+  .bg-green-dim { background: var(--green-dim); }
+  .bg-red-dim { background: var(--red-dim); }
+  .bg-blue-dim { background: var(--blue-dim); }
+  .bg-gold-dim { background: var(--gold-dim); }
+}
+
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
+.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+.mb-nav { margin-bottom: 84px; }
+
+.card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
+.card-elevated { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
+
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.02em; }
+.chip-buy { background: var(--green-dim); color: var(--green); }
+.chip-sell { background: var(--red-dim); color: var(--red); }
+.chip-nse { background: var(--blue-dim); color: var(--blue); }
+.chip-watching { background: var(--gold-dim); color: var(--gold); }
+
+.btn-primary { width: 100%; background: var(--green); color: #0A0B0F; font-weight: 700; font-size: 16px; padding: 16px; border-radius: 14px; border: none; cursor: pointer; transition: opacity 0.15s, transform 0.1s; text-align: center; font-family: 'Satoshi', sans-serif; }
+.btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+.btn-secondary { width: 100%; background: var(--bg-elevated); color: var(--text-primary); font-weight: 600; font-size: 15px; padding: 14px; border-radius: 14px; border: 1px solid var(--border-strong); cursor: pointer; font-family: 'Satoshi', sans-serif; }
+
+.input { width: 100%; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 12px; padding: 14px 16px; font-size: 16px; color: var(--text-primary); font-family: 'Satoshi', sans-serif; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
+.input:focus { border-color: var(--blue); }
+.input::placeholder { color: var(--text-tertiary); }
+
+.divider { height: 1px; background: var(--border); }
+
+.sheet-enter { animation: sheetUp 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.num { font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; }
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+.neu { color: var(--text-secondary); }
+
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: livePulse 2s ease-in-out infinite; }
+@keyframes livePulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
