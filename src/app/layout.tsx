@@ -2,18 +2,18 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'STOKED — by Accrion Advisory',
-  description: 'Private investing circles for serious retail investors. A product of Accrion Advisory.',
+  title: 'STOKED — by Accrion',
+  description: 'Private investing circles for serious retail investors. A product of Accrion.',
   applicationName: 'STOKED',
-  authors: [{ name: 'Accrion Advisory' }],
-  publisher: 'Accrion Advisory',
+  authors: [{ name: 'Accrion' }],
+  publisher: 'Accrion',
   manifest: '/manifest.json',
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'STOKED' },
   icons: { icon: '/icons/icon-192.png', apple: '/icons/apple-touch-icon.png' },
   openGraph: {
     title: 'STOKED',
-    description: 'Private investing circles for serious retail investors. A product of Accrion Advisory.',
-    siteName: 'STOKED by Accrion Advisory',
+    description: 'Private investing circles for serious retail investors. A product of Accrion.',
+    siteName: 'STOKED by Accrion',
     type: 'website',
   },
 }
@@ -23,7 +23,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#0A0B0F',
+  viewportFit: 'cover',
+  themeColor: '#08090C',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

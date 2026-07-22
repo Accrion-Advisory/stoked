@@ -137,7 +137,7 @@ export default function MemberPortfolioPage() {
 }
 
 const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: 16, fontSize: 14, padding: 0, display: 'flex', alignItems: 'center', gap: 6 }
-const statCard: React.CSSProperties = { background: 'var(--bg-surface)', borderRadius: 12, padding: '12px 14px', border: '1px solid var(--border)' }
+const statCard: React.CSSProperties = { background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.012)), var(--bg-surface)', borderRadius: 14, padding: '13px 15px', border: '1px solid var(--border)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 30px -22px rgba(0,0,0,0.9)' }
 const statLabel: React.CSSProperties = { fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 4 }
 const statBig: React.CSSProperties = { fontSize: 20, fontWeight: 800 }
 const sectionLabel: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }

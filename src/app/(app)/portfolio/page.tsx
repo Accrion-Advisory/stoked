@@ -22,7 +22,7 @@ export default function PortfolioPage() {
   return (
     <div className="mb-nav">
       {/* Header */}
-      <div style={{ padding: '52px 20px 20px', background: 'var(--bg-base)' }}>
+      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 44px) 20px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
           <Avatar name={user.name} userId={user.id} size="lg" />
           <div>
@@ -123,7 +123,7 @@ export default function PortfolioPage() {
   )
 }
 
-const statCard: React.CSSProperties = { background: 'var(--bg-surface)', borderRadius: 12, padding: '14px', border: '1px solid var(--border)' }
+const statCard: React.CSSProperties = { background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.012)), var(--bg-surface)', borderRadius: 14, padding: '14px', border: '1px solid var(--border)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 30px -22px rgba(0,0,0,0.9)' }
 const statLabel: React.CSSProperties = { fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 6 }
 const statBig: React.CSSProperties = { fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em' }
 const sectionLabel: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', letterSpacing: '0.08em', textTransform: 'uppercase' }

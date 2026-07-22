@@ -20,7 +20,7 @@ function LoginInner() {
   const [state, action, pending] = useActionState(login, undefined)
 
   return (
-    <div style={{ minHeight: '100dvh', background: 'var(--bg-base)', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 24px' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ textAlign: 'center', marginBottom: 40 }}>
         <div style={{ fontSize: 40, fontWeight: 900, letterSpacing: '-0.02em', marginBottom: 6 }}>
           <span style={{ color: 'var(--text-primary)' }}>ST</span>

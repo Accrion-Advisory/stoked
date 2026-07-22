@@ -49,7 +49,7 @@ export default function DashboardPage() {
   return (
     <div className="mb-nav">
       {/* Sticky header */}
-      <div style={{ padding: '52px 20px 16px', background: 'var(--bg-base)', position: 'sticky', top: 0, zIndex: 50 }}>
+      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 44px) 20px 16px', background: 'rgba(10, 11, 15, 0.72)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', position: 'sticky', top: 0, zIndex: 50, borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
@@ -141,7 +141,7 @@ export default function DashboardPage() {
   )
 }
 
-const statCard: React.CSSProperties = { background: 'var(--bg-surface)', borderRadius: 12, padding: '12px 14px', border: '1px solid var(--border)' }
+const statCard: React.CSSProperties = { background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.012)), var(--bg-surface)', borderRadius: 14, padding: '13px 15px', border: '1px solid var(--border)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 30px -22px rgba(0,0,0,0.9)' }
 const statLabel: React.CSSProperties = { fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 4 }
 const statBig: React.CSSProperties = { fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em' }
 const statSub: React.CSSProperties = { fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }

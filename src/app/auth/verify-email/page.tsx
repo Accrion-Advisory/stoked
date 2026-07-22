@@ -3,7 +3,7 @@ import { AccrionBadge } from '@/components/brand/AccrionBadge'
 
 export default function VerifyEmailPage() {
   return (
-    <div style={{ minHeight: '100dvh', background: 'var(--bg-base)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 32px', textAlign: 'center' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 32px', textAlign: 'center' }}>
       <div style={{ fontSize: 48, marginBottom: 16 }}>📬</div>
       <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 10 }}>Check your inbox</div>
       <div style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.6, maxWidth: 320 }}>

@@ -5,7 +5,7 @@ import { AppProvider } from '@/lib/context'
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AppProvider>
-      <div style={{ minHeight: '100dvh', background: 'var(--bg-base)' }}>
+      <div style={{ minHeight: '100dvh' }}>
         <AppChrome>{children}</AppChrome>
         <BottomNav />
       </div>

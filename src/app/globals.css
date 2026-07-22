@@ -5,14 +5,14 @@
 
 :root {
   --bg-base: #0A0B0F;
-  --bg-surface: #111318;
-  --bg-elevated: #171A20;
-  --bg-overlay: #1E2128;
-  --border: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.12);
+  --bg-surface: #15171F;
+  --bg-elevated: #1C1F29;
+  --bg-overlay: #23262F;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
   --text-primary: #F4F6FA;
-  --text-secondary: #8B93A7;
-  --text-tertiary: #4A5168;
+  --text-secondary: #9098AC;
+  --text-tertiary: #5A6076;
   --green: #21D07A;
   --green-dim: rgba(33, 208, 122, 0.12);
   --red: #FF5C7A;
@@ -21,7 +21,13 @@
   --blue-dim: rgba(91, 140, 255, 0.12);
   --gold: #F6C453;
   --gold-dim: rgba(246, 196, 83, 0.12);
-  /* Accrion Advisory (parent brand) */
+  /* Soft top-of-screen ambient glow (the app's hero atmosphere) */
+  --ambient: radial-gradient(130% 42% at 50% -4%, rgba(33, 208, 122, 0.16) 0%, rgba(91, 140, 255, 0.07) 34%, transparent 68%);
+  /* Lifted card surface: subtle top-lit gradient + inner highlight */
+  --card-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.012) 100%);
+  --card-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --card-shadow: 0 12px 30px -20px rgba(0, 0, 0, 0.9);
+  /* Accrion (parent brand) */
   --accrion-violet: #9d6cff;
   --accrion-teal: #22C6B8;
   --accrion-navy: #1B1F3D;
@@ -32,21 +38,29 @@
 
 html {
   font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--bg-base);
+  background: #060709;
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
+  scrollbar-width: none;          /* Firefox / modern Chromium: no scrollbar */
+  -ms-overflow-style: none;
 }
 
 body {
-  background: var(--bg-base);
+  background: var(--ambient), linear-gradient(180deg, #0E1017 0%, #0A0B0F 46%, #08090C 100%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;   /* keep the glow anchored to the viewport */
   min-height: 100dvh;
   max-width: 430px;
   margin: 0 auto;
   position: relative;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-::-webkit-scrollbar { width: 0; background: transparent; }
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+::-webkit-scrollbar { width: 0; height: 0; background: transparent; }
 
 @layer utilities {
   .bg-base { background: var(--bg-base); }
@@ -71,8 +85,10 @@ body {
 .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
 .mb-nav { margin-bottom: 84px; }
 
-.card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
-.card-elevated { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
+.card { background: var(--bg-surface); background-image: var(--card-surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; box-shadow: var(--card-highlight), var(--card-shadow); }
+.card-elevated { background: var(--bg-elevated); background-image: var(--card-surface); border: 1px solid var(--border-strong); border-radius: 16px; padding: 16px; box-shadow: var(--card-highlight); }
+/* Reusable lifted surface — same lighting as .card, for inline-styled panels */
+.surface { background-color: var(--bg-surface); background-image: var(--card-surface); border: 1px solid var(--border); box-shadow: var(--card-highlight), var(--card-shadow); }
 
 .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.02em; }
 .chip-buy { background: var(--green-dim); color: var(--green); }
@@ -80,8 +96,9 @@ body {
 .chip-nse { background: var(--blue-dim); color: var(--blue); }
 .chip-watching { background: var(--gold-dim); color: var(--gold); }
 
-.btn-primary { width: 100%; background: var(--green); color: #0A0B0F; font-weight: 700; font-size: 16px; padding: 16px; border-radius: 14px; border: none; cursor: pointer; transition: opacity 0.15s, transform 0.1s; text-align: center; font-family: 'Satoshi', sans-serif; }
-.btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+.btn-primary { width: 100%; background: linear-gradient(180deg, #2BE089 0%, #17BE6B 100%); color: #04120A; font-weight: 700; font-size: 16px; padding: 16px; border-radius: 14px; border: none; cursor: pointer; transition: opacity 0.15s, transform 0.1s, box-shadow 0.2s; text-align: center; font-family: 'Satoshi', sans-serif; box-shadow: 0 8px 24px -10px rgba(33, 208, 122, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+.btn-primary:active { opacity: 0.9; transform: scale(0.98); }
+.btn-primary:disabled { filter: saturate(0.7); }
 .btn-secondary { width: 100%; background: var(--bg-elevated); color: var(--text-primary); font-weight: 600; font-size: 15px; padding: 14px; border-radius: 14px; border: 1px solid var(--border-strong); cursor: pointer; font-family: 'Satoshi', sans-serif; }
 
 .input { width: 100%; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 12px; padding: 14px 16px; font-size: 16px; color: var(--text-primary); font-family: 'Satoshi', sans-serif; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
@@ -104,6 +121,6 @@ body {
 .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--border-strong); border-top-color: var(--green); animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Accrion Advisory attribution */
+/* Accrion attribution */
 .accrion-gradient-text { background: var(--accrion-grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
 .accrion-chip { display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; background: linear-gradient(150deg, #ffffff 0%, #ece9f7 100%); box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 6px 20px -8px rgba(124,92,255,0.45); flex-shrink: 0; }

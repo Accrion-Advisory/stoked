@@ -16,7 +16,6 @@ export default function DevLoginPage() {
     <div
       style={{
         minHeight: '100dvh',
-        background: 'var(--bg-base)',
         display: 'flex',
         flexDirection: 'column',
         padding: '0 24px',

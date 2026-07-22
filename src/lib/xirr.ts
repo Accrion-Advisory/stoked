@@ -30,12 +30,22 @@ export function calculateXIRR(cashflows: { amount: number; date: Date }[]): numb
     const npvValue = npv(rate)
     const dnpvValue = dnpv(rate)
     if (Math.abs(dnpvValue) < 1e-10) break
-    const newRate = rate - npvValue / dnpvValue
-    if (Math.abs(newRate - rate) < TOLERANCE) return newRate * 100
+    let newRate = rate - npvValue / dnpvValue
+    // Keep the discount base (1 + rate) positive — otherwise Math.pow of a
+    // negative base to a fractional power returns NaN (this is what produced
+    // "XIRR NaN%" on heavy-loss portfolios).
+    if (!isFinite(newRate) || newRate <= -0.9999) newRate = -0.9999
+    if (Math.abs(newRate - rate) < TOLERANCE) {
+      rate = newRate
+      break
+    }
     rate = newRate
   }
 
-  return rate * 100
+  const result = rate * 100
+  if (!isFinite(result)) return 0
+  // An annualized return can't be worse than losing everything (-100%).
+  return Math.max(result, -99.99)
 }
 
 export function calculatePortfolioXIRR(

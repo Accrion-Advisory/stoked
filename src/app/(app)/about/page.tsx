@@ -24,23 +24,25 @@ export default function AboutPage() {
       </div>
 
       {/* Accrion parent brand */}
-      <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '28px 24px', textAlign: 'center' }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 20 }}>
+      <div className="surface" style={{ borderRadius: 20, padding: '30px 24px', textAlign: 'center' }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 22 }}>
           A product of
         </div>
-        <div style={{ background: 'linear-gradient(150deg, #ffffff 0%, #ece9f7 100%)', borderRadius: 16, padding: '24px 20px', boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 10px 30px -12px rgba(124,92,255,0.4)', display: 'flex', justifyContent: 'center' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/accrion/logo-full.png" alt="Accrion Advisory" style={{ width: '78%', maxWidth: 260, height: 'auto' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+          <span className="accrion-chip" style={{ width: 76, height: 76, borderRadius: 20 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/accrion/logo-mark.png" alt="Accrion" style={{ width: 54, height: 'auto' }} />
+          </span>
+          <span className="accrion-gradient-text" style={{ fontSize: 32, fontWeight: 900, letterSpacing: '-0.02em' }}>Accrion</span>
         </div>
         <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.65, marginTop: 22 }}>
-          <span className="accrion-gradient-text" style={{ fontWeight: 800 }}>Accrion Advisory</span> builds
-          thoughtful tools and advisory experiences for the modern Indian investor. STOKED is part
-          of that mission.
+          <span className="accrion-gradient-text" style={{ fontWeight: 800 }}>Accrion</span> builds
+          thoughtful tools and experiences for the modern Indian investor. STOKED is part of that mission.
         </div>
       </div>
 
       <div style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: 'var(--text-tertiary)' }}>
-        © {new Date().getFullYear()} Accrion Advisory · All rights reserved
+        © {new Date().getFullYear()} Accrion · All rights reserved
       </div>
     </div>
   )
