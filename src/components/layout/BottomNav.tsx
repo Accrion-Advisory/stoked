@@ -7,7 +7,7 @@ const NAV = [
   { href: '/portfolio', label: 'Portfolio', icon: BriefcaseIcon },
   { href: '/trade', label: '', icon: PlusIcon, isCenter: true },
   { href: '/watchlist', label: 'Markets', icon: ChartIcon },
-  { href: '/group', label: 'Group', icon: UsersIcon },
+  { href: '/group', label: 'Connect', icon: UsersIcon },
 ]
 
 export default function BottomNav() {
