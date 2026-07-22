@@ -47,16 +47,25 @@ export async function fetchStockPrice(
     if (!result) return null
 
     const meta = result.meta
+    // Yahoo omits `previousClose` on some (esp. after-hours) 1d responses, which
+    // would make change/change_percent blow up. Fall back through the other
+    // close fields and guard the division.
+    const prevClose =
+      meta.previousClose ??
+      meta.chartPreviousClose ??
+      meta.regularMarketPreviousClose ??
+      0
+    const current = meta.regularMarketPrice ?? prevClose
+    const change = prevClose ? current - prevClose : 0
+    const changePercent = prevClose ? (change / prevClose) * 100 : 0
+
     const price: StockPrice = {
       symbol,
       company_name: meta.shortName || meta.longName || symbol,
-      price: meta.regularMarketPrice || meta.previousClose,
-      change: (meta.regularMarketPrice || 0) - (meta.previousClose || 0),
-      change_percent:
-        (((meta.regularMarketPrice || 0) - (meta.previousClose || 0)) /
-          (meta.previousClose || 1)) *
-        100,
-      previous_close: meta.previousClose || 0,
+      price: current,
+      change,
+      change_percent: changePercent,
+      previous_close: prevClose,
       open: meta.regularMarketOpen || 0,
       day_high: meta.regularMarketDayHigh || 0,
       day_low: meta.regularMarketDayLow || 0,
