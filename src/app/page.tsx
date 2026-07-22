@@ -4,5 +4,6 @@ export default function RootPage() {
   if (process.env.NEXT_PUBLIC_DEV_MODE === 'true') {
     redirect('/auth/dev-login')
   }
-  redirect('/auth/login')
+  // In live mode, proxy.ts sends unauthenticated users to /auth/login.
+  redirect('/dashboard')
 }

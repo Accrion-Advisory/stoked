@@ -1,10 +1,14 @@
 export interface User {
   id: string
+  username: string
   name: string
   email: string
   avatar_url?: string
   created_at: string
 }
+
+// Alias: a "profile" is just the public-facing User row.
+export type Profile = User
 
 export interface Group {
   id: string
@@ -24,10 +28,24 @@ export interface Membership {
   user?: User
 }
 
+export type ConnectionStatus = 'pending' | 'accepted'
+
+export interface Connection {
+  id: string
+  requester_id: string
+  addressee_id: string
+  status: ConnectionStatus
+  created_at: string
+  responded_at?: string
+  // The OTHER party in the connection, from the current user's perspective.
+  other?: User
+  // 'incoming' = they requested me, 'outgoing' = I requested them.
+  direction?: 'incoming' | 'outgoing'
+}
+
 export interface Trade {
   id: string
   user_id: string
-  group_id: string
   symbol: string
   exchange: 'NSE' | 'BSE'
   type: 'BUY' | 'SELL'
@@ -57,7 +75,6 @@ export interface Holding {
 export interface WatchlistItem {
   id: string
   user_id: string
-  group_id: string
   symbol: string
   exchange: 'NSE' | 'BSE'
   target_price?: number
@@ -90,16 +107,6 @@ export interface MemberPortfolio {
   current_value: number
   total_pnl: number
   total_pnl_percent: number
-  xirr?: number
+  xirr: number
   trade_count: number
-}
-
-export interface GroupStats {
-  total_value: number
-  total_invested: number
-  member_count: number
-  avg_xirr: number
-  top_performer?: MemberPortfolio
-  most_held_stock?: string
-  today_change?: number
 }

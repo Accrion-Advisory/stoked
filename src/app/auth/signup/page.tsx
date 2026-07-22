@@ -2,57 +2,58 @@
 import { Suspense, useActionState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { login } from '@/app/auth/actions'
+import { signup } from '@/app/auth/actions'
 
-export default function LoginPage() {
+export default function SignupPage() {
   return (
     <Suspense fallback={null}>
-      <LoginInner />
+      <SignupInner />
     </Suspense>
   )
 }
 
-function LoginInner() {
+function SignupInner() {
   const params = useSearchParams()
   const next = params.get('next') ?? '/dashboard'
-  const urlError = params.get('error')
-  const [state, action, pending] = useActionState(login, undefined)
+  const [state, action, pending] = useActionState(signup, undefined)
 
   return (
     <div style={{ minHeight: '100dvh', background: 'var(--bg-base)', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 24px' }}>
-      <div style={{ textAlign: 'center', marginBottom: 40 }}>
+      <div style={{ textAlign: 'center', marginBottom: 36 }}>
         <div style={{ fontSize: 40, fontWeight: 900, letterSpacing: '-0.02em', marginBottom: 6 }}>
           <span style={{ color: 'var(--text-primary)' }}>ST</span>
           <span style={{ color: 'var(--green)' }}>O</span>
           <span style={{ color: 'var(--text-primary)' }}>KED</span>
         </div>
-        <div style={{ fontSize: 15, color: 'var(--text-secondary)' }}>Invest together. Win together.</div>
+        <div style={{ fontSize: 15, color: 'var(--text-secondary)' }}>Create your account</div>
       </div>
 
       <form action={action} style={{ width: '100%', maxWidth: 360, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <input type="hidden" name="next" value={next} />
 
         <div>
+          <label style={labelStyle}>Name</label>
+          <input className="input" type="text" name="name" placeholder="Vikas Sharma" autoComplete="name" required />
+        </div>
+        <div>
           <label style={labelStyle}>Email</label>
           <input className="input" type="email" name="email" placeholder="you@email.com" autoComplete="email" required />
         </div>
         <div>
           <label style={labelStyle}>Password</label>
-          <input className="input" type="password" name="password" placeholder="••••••••" autoComplete="current-password" required />
+          <input className="input" type="password" name="password" placeholder="At least 8 characters" autoComplete="new-password" minLength={8} required />
         </div>
 
-        {(state?.error || urlError) && (
-          <div style={errorStyle}>{state?.error || urlError}</div>
-        )}
+        {state?.error && <div style={errorStyle}>{state.error}</div>}
 
         <button className="btn-primary" type="submit" disabled={pending} style={{ marginTop: 4, opacity: pending ? 0.6 : 1 }}>
-          {pending ? 'Signing in…' : 'Log In'}
+          {pending ? 'Creating account…' : 'Sign Up'}
         </button>
 
         <div style={{ textAlign: 'center', marginTop: 12, fontSize: 14, color: 'var(--text-secondary)' }}>
-          New here?{' '}
-          <Link href={`/auth/signup${next !== '/dashboard' ? `?next=${encodeURIComponent(next)}` : ''}`} style={{ color: 'var(--green)', fontWeight: 700 }}>
-            Create an account
+          Already have an account?{' '}
+          <Link href={`/auth/login${next !== '/dashboard' ? `?next=${encodeURIComponent(next)}` : ''}`} style={{ color: 'var(--green)', fontWeight: 700 }}>
+            Log in
           </Link>
         </div>
       </form>
