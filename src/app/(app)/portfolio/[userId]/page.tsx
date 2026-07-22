@@ -28,7 +28,7 @@ export default function MemberPortfolioPage() {
         <div style={{ fontSize: 14, color: 'var(--text-secondary)', maxWidth: 280, margin: '0 auto 20px' }}>
           You can only see this portfolio if you share a group or are connected.
         </div>
-        <Link href="/connections" style={{ color: 'var(--green)', fontWeight: 700 }}>Manage connections →</Link>
+        <Link href="/connect" style={{ color: 'var(--green)', fontWeight: 700 }}>Manage connections →</Link>
       </div>
     )
   }

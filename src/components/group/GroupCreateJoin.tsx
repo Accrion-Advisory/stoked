@@ -4,7 +4,7 @@ import { useApp } from '@/lib/context'
 
 // Shared create-a-group / join-by-code control. Used on the empty-state screen
 // and inside the Group tab.
-export default function GroupCreateJoin({ compact = false }: { compact?: boolean }) {
+export default function GroupCreateJoin({ compact = false, onDone }: { compact?: boolean; onDone?: () => void }) {
   const { createGroup, joinGroup } = useApp()
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
@@ -18,6 +18,7 @@ export default function GroupCreateJoin({ compact = false }: { compact?: boolean
     try {
       await createGroup(name.trim())
       setName('')
+      onDone?.()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not create group')
     } finally {
@@ -33,6 +34,7 @@ export default function GroupCreateJoin({ compact = false }: { compact?: boolean
     try {
       await joinGroup(c)
       setCode('')
+      onDone?.()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Invalid invite code')
     } finally {

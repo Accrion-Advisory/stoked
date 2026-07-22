@@ -58,7 +58,7 @@ export default function DashboardPage() {
             </div>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{groupMembers.length} members</div>
           </div>
-          <Link href="/connections" aria-label="Connections">
+          <Link href="/connect" aria-label="Connect">
             <Avatar name={user.name} userId={user.id} size="md" />
           </Link>
         </div>

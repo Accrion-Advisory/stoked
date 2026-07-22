@@ -6,20 +6,18 @@ import { formatCurrency, formatPercent } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
 import PnlBadge from '@/components/ui/PnlBadge'
 import EmptyGroup from '@/components/group/EmptyGroup'
-import GroupCreateJoin from '@/components/group/GroupCreateJoin'
 import Link from 'next/link'
 
 const MEDALS = ['🥇', '🥈', '🥉']
 
 export default function GroupPage() {
   const {
-    user, groups, currentGroup, currentGroupId, setCurrentGroupId,
+    user, currentGroup, currentGroupId,
     memberships, profilesById, trades, prices, leaveGroup, setGroupVisibility,
   } = useApp()
   const [tab, setTab] = useState<'leaderboard' | 'members' | 'invite'>('leaderboard')
   const [origin, setOrigin] = useState('')
   const [copied, setCopied] = useState(false)
-  const [addMode, setAddMode] = useState(false)
 
   useEffect(() => setOrigin(window.location.origin), [])
 
@@ -57,7 +55,11 @@ export default function GroupPage() {
   return (
     <div className="mb-nav">
       {/* Header */}
-      <div style={{ padding: '52px 20px 16px', borderBottom: '1px solid var(--border)' }}>
+      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 40px) 20px 16px', borderBottom: '1px solid var(--border)' }}>
+        <Link href="/connect" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600, textDecoration: 'none', marginBottom: 14 }}>
+          <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="15,18 9,12 15,6" /></svg>
+          Connect
+        </Link>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 2 }}>{currentGroup.name}</div>
@@ -69,18 +71,6 @@ export default function GroupPage() {
             XIRR {formatPercent(groupXirr)}
           </div>
         </div>
-
-        {/* Group switcher */}
-        {groups.length > 1 && (
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 12, paddingBottom: 4 }}>
-            {groups.map((g) => (
-              <button key={g.id} onClick={() => setCurrentGroupId(g.id)}
-                style={{ padding: '6px 12px', borderRadius: 999, border: '1px solid var(--border)', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'Satoshi, sans-serif', background: g.id === currentGroupId ? 'var(--green)' : 'var(--bg-elevated)', color: g.id === currentGroupId ? '#0A0B0F' : 'var(--text-secondary)' }}>
-                {g.name}
-              </button>
-            ))}
-          </div>
-        )}
 
         {/* Tabs */}
         <div style={{ display: 'flex' }}>
@@ -189,14 +179,6 @@ export default function GroupPage() {
           >
             Share via WhatsApp / Other
           </button>
-
-          {/* Create / join another */}
-          <div style={{ marginTop: 24 }}>
-            <button onClick={() => setAddMode((v) => !v)} style={{ background: 'none', border: 'none', color: 'var(--green)', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'Satoshi, sans-serif' }}>
-              {addMode ? '− Hide' : '+ Create or join another group'}
-            </button>
-            {addMode && <div style={{ marginTop: 16 }}><GroupCreateJoin compact /></div>}
-          </div>
         </div>
       )}
     </div>
