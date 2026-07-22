@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation'
 import { DEV_USERS } from '@/lib/dev-data'
 import { getInitials, getAvatarColor } from '@/lib/dev-data'
+import { AccrionBadge } from '@/components/brand/AccrionBadge'
 
 export default function DevLoginPage() {
   const router = useRouter()
@@ -116,8 +117,12 @@ export default function DevLoginPage() {
         <div style={{ fontSize: 12, color: 'var(--text-tertiary)', lineHeight: 1.6, textAlign: 'center' }}>
           🔧 Developer mode · Mock data · No real trades
           <br />
-          Set <code style={{ color: 'var(--blue)' }}>NEXT_PUBLIC_DEV_MODE=false</code> to enable Google login
+          Set <code style={{ color: 'var(--blue)' }}>NEXT_PUBLIC_DEV_MODE=false</code> for live email login
         </div>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '32px 0 24px' }}>
+        <AccrionBadge />
       </div>
     </div>
   )

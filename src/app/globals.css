@@ -21,6 +21,11 @@
   --blue-dim: rgba(91, 140, 255, 0.12);
   --gold: #F6C453;
   --gold-dim: rgba(246, 196, 83, 0.12);
+  /* Accrion Advisory (parent brand) */
+  --accrion-violet: #9d6cff;
+  --accrion-teal: #22C6B8;
+  --accrion-navy: #1B1F3D;
+  --accrion-grad: linear-gradient(120deg, #9d6cff 0%, #5b8def 50%, #22c6b8 100%);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -98,3 +103,7 @@ body {
 
 .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--border-strong); border-top-color: var(--green); animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Accrion Advisory attribution */
+.accrion-gradient-text { background: var(--accrion-grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+.accrion-chip { display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; background: linear-gradient(150deg, #ffffff 0%, #ece9f7 100%); box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 6px 20px -8px rgba(124,92,255,0.45); flex-shrink: 0; }

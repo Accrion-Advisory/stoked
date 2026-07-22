@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useApp } from '@/lib/context'
 import Avatar from '@/components/ui/Avatar'
+import { AccrionBadge } from '@/components/brand/AccrionBadge'
 import { logout } from '@/app/auth/actions'
 
 function ConnectionsInner() {
@@ -112,6 +113,12 @@ function ConnectionsInner() {
           ))}
         </Section>
       )}
+
+      {/* Footer / brand */}
+      <div style={{ marginTop: 36, paddingTop: 24, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+        <Link href="/about" style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 600, textDecoration: 'none' }}>About STOKED</Link>
+        <AccrionBadge href="/about" />
+      </div>
     </div>
   )
 }

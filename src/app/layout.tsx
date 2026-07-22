@@ -2,11 +2,20 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'STOKED',
-  description: 'Private investing circles for serious retail investors.',
+  title: 'STOKED — by Accrion Advisory',
+  description: 'Private investing circles for serious retail investors. A product of Accrion Advisory.',
+  applicationName: 'STOKED',
+  authors: [{ name: 'Accrion Advisory' }],
+  publisher: 'Accrion Advisory',
   manifest: '/manifest.json',
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'STOKED' },
   icons: { icon: '/icons/icon-192.png', apple: '/icons/apple-touch-icon.png' },
+  openGraph: {
+    title: 'STOKED',
+    description: 'Private investing circles for serious retail investors. A product of Accrion Advisory.',
+    siteName: 'STOKED by Accrion Advisory',
+    type: 'website',
+  },
 }
 
 export const viewport: Viewport = {

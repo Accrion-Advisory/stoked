@@ -3,6 +3,7 @@ import { Suspense, useActionState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { signup } from '@/app/auth/actions'
+import { AccrionBadge } from '@/components/brand/AccrionBadge'
 
 export default function SignupPage() {
   return (
@@ -57,6 +58,10 @@ function SignupInner() {
           </Link>
         </div>
       </form>
+
+      <div style={{ position: 'absolute', bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)', left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
+        <AccrionBadge />
+      </div>
     </div>
   )
 }
