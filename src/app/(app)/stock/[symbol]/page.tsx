@@ -8,33 +8,30 @@ import { formatDate } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
 import PnlBadge from '@/components/ui/PnlBadge'
 import Link from 'next/link'
-import type { StockPrice } from '@/types'
 
 const CHART_TABS = ['1W', '1M', '3M', '1Y']
 
 export default function StockPage() {
   const { symbol } = useParams<{ symbol: string }>()
   const router = useRouter()
-  const { trades, watchlist, user, addWatchlist, profilesById, prices } = useApp()
+  const { trades, watchlist, user, addWatchlist, profilesById, prices, requestSymbols } = useApp()
   const [tab, setTab] = useState('3M')
-  const [fetched, setFetched] = useState<StockPrice | null>(null)
   const [adding, setAdding] = useState(false)
 
   const sym = (symbol ?? '').toUpperCase()
 
-  // Prefer a price already in context (held/watched); otherwise fetch it live.
-  const contextPrice = prices[priceKey(sym, 'NSE')] ?? prices[sym]
-  const price = contextPrice ?? fetched
+  // Infer the exchange from any holding/watch of this symbol, default NSE.
+  const exch: 'NSE' | 'BSE' =
+    trades.find((t) => t.symbol.toUpperCase() === sym)?.exchange ??
+    watchlist.find((w) => w.symbol.toUpperCase() === sym)?.exchange ??
+    'NSE'
 
+  const price = prices[priceKey(sym, exch)] ?? prices[sym]
+
+  // Load this symbol's quote through the shared, cached price engine.
   useEffect(() => {
-    if (contextPrice || !sym) return
-    let cancelled = false
-    fetch(`/api/prices?s=${sym}:NSE`)
-      .then((r) => (r.ok ? r.json() : {}))
-      .then((data: Record<string, StockPrice>) => { if (!cancelled) setFetched(data[`${sym}.NSE`] ?? null) })
-      .catch(() => {})
-    return () => { cancelled = true }
-  }, [sym, contextPrice])
+    if (sym) requestSymbols([{ symbol: sym, exchange: exch }])
+  }, [sym, exch, requestSymbols])
 
   // Who (among people I can see) holds this stock.
   const holdersData = useMemo(() => {
@@ -61,7 +58,7 @@ export default function StockPage() {
     if (!user || isWatching || adding) return
     setAdding(true)
     try {
-      await addWatchlist({ user_id: user.id, symbol: sym, exchange: 'NSE' })
+      await addWatchlist({ user_id: user.id, symbol: sym, exchange: exch })
     } finally {
       setAdding(false)
     }
@@ -82,7 +79,7 @@ export default function StockPage() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.01em' }}>{sym}</span>
-              <span className="chip chip-nse">NSE</span>
+              <span className="chip" style={{ background: exch === 'NSE' ? 'var(--blue-dim)' : 'var(--gold-dim)', color: exch === 'NSE' ? 'var(--blue)' : 'var(--gold)' }}>{exch}</span>
               {price && <div className="live-dot" />}
             </div>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{price?.company_name ?? sym}</div>

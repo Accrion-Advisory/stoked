@@ -34,7 +34,8 @@ export async function fetchStockPrice(
   }
 
   try {
-    const url = `${YAHOO_BASE}/${yahooSymbol}?interval=1d&range=1d`
+    // Encode the symbol path segment — tickers like M&M / L&TFH contain '&'.
+    const url = `${YAHOO_BASE}/${encodeURIComponent(yahooSymbol)}?interval=1d&range=1d`
     const res = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0' },
       next: { revalidate: 900 },

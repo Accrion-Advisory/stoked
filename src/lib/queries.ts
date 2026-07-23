@@ -254,3 +254,22 @@ export async function removeConnection(id: string) {
   const { error } = await supabase.from('connections').delete().eq('id', id)
   if (error) throw error
 }
+
+// ---- Securities search ------------------------------------------------------
+
+export interface Security {
+  symbol: string
+  exchange: 'NSE' | 'BSE'
+  name: string
+}
+
+// Ranked NSE/BSE search over the full securities master (via the
+// search_securities RPC). Returns [] on error so the UI can fall back.
+export async function searchSecurities(q: string, limit = 20): Promise<Security[]> {
+  const query = q.trim()
+  if (!query) return []
+  const supabase = createClient()
+  const { data, error } = await supabase.rpc('search_securities', { q: query, lim: limit })
+  if (error) return []
+  return (data ?? []) as Security[]
+}

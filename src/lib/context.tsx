@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   ReactNode,
 } from 'react'
@@ -39,7 +40,8 @@ import {
   acceptConnection as qAcceptConnection,
   removeConnection as qRemoveConnection,
 } from '@/lib/queries'
-import { uniqueSymbols, PriceMap } from '@/lib/portfolio'
+import { uniqueSymbols } from '@/lib/portfolio'
+import { fetchPrices, cachedPrices, PRICE_TTL_MS, type PriceMap, type Pair } from '@/lib/price-store'
 
 const IS_DEV_MODE = process.env.NEXT_PUBLIC_DEV_MODE === 'true'
 
@@ -54,6 +56,8 @@ interface AppContextValue extends AppData {
   currentGroupId: string | null
   setCurrentGroupId: (id: string | null) => void
   prices: PriceMap
+  // Load quotes for extra symbols on demand (e.g. the stock detail page).
+  requestSymbols: (pairs: Pair[]) => void
   // Mutations
   addTrade: (t: Omit<Trade, 'id' | 'created_at' | 'user'>) => Promise<void>
   removeTrade: (id: string) => Promise<void>
@@ -80,32 +84,53 @@ export function AppProvider({ children }: { children: ReactNode }) {
 }
 
 // ---------------------------------------------------------------------------
-// Shared: fetch live prices for a set of symbols via the server route.
+// Shared price engine: lazily loads quotes for the symbols the user is looking
+// at (held/watched + on-demand), dedupes/caches at the app level, and refreshes
+// every 5 minutes — but only while the tab is visible.
 // ---------------------------------------------------------------------------
-function usePrices(rows: { symbol: string; exchange: 'NSE' | 'BSE' }[]) {
-  const [prices, setPrices] = useState<PriceMap>({})
-  const symbolsKey = useMemo(() => {
-    return uniqueSymbols(rows)
-      .map((r) => `${r.symbol}:${r.exchange}`)
-      .sort()
-      .join(',')
-  }, [rows])
+function usePriceEngine(neededRows: Pair[]) {
+  const [prices, setPrices] = useState<PriceMap>(() => cachedPrices())
+  const extraRef = useRef<Map<string, Pair>>(new Map())
 
+  const symbolsKey = useMemo(
+    () => uniqueSymbols(neededRows).map((r) => `${r.symbol}:${r.exchange}`).sort().join(','),
+    [neededRows]
+  )
+
+  const load = useCallback(
+    async (force: boolean) => {
+      const base: Pair[] = symbolsKey ? symbolsKey.split(',').map((s) => {
+        const [symbol, exchange] = s.split(':')
+        return { symbol, exchange: exchange as 'NSE' | 'BSE' }
+      }) : []
+      const pairs = [...base, ...extraRef.current.values()]
+      if (!pairs.length) return
+      const merged = await fetchPrices(pairs, force)
+      setPrices({ ...merged })
+    },
+    [symbolsKey]
+  )
+
+  // Fetch when the set of symbols changes (and on mount).
+  useEffect(() => { load(false) }, [load])
+
+  // Refresh every 5 min, only while the tab is open; refresh on regaining focus.
   useEffect(() => {
-    if (!symbolsKey) return
-    let cancelled = false
-    fetch(`/api/prices?s=${encodeURIComponent(symbolsKey)}`)
-      .then((r) => (r.ok ? r.json() : {}))
-      .then((data: PriceMap) => {
-        if (!cancelled) setPrices((prev) => ({ ...prev, ...data }))
-      })
-      .catch(() => {})
-    return () => {
-      cancelled = true
-    }
-  }, [symbolsKey])
+    const id = setInterval(() => { if (!document.hidden) load(true) }, PRICE_TTL_MS)
+    const onVis = () => { if (!document.hidden) load(true) }
+    document.addEventListener('visibilitychange', onVis)
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVis) }
+  }, [load])
 
-  return prices
+  const requestSymbols = useCallback((pairs: Pair[]) => {
+    for (const p of pairs) {
+      const k = `${p.symbol.toUpperCase()}.${p.exchange}`
+      if (!extraRef.current.has(k)) extraRef.current.set(k, p)
+    }
+    fetchPrices(pairs).then((m) => setPrices({ ...m }))
+  }, [])
+
+  return { prices, requestSymbols }
 }
 
 // ---------------------------------------------------------------------------
@@ -152,9 +177,9 @@ function LiveProvider({ children }: { children: ReactNode }) {
     () => [...data.trades, ...data.watchlist],
     [data.trades, data.watchlist]
   )
-  const prices = usePrices(priceRows)
+  const { prices, requestSymbols } = usePriceEngine(priceRows)
 
-  const value = useLiveValue(data, loading, currentGroupId, setCurrentGroupId, prices, refresh)
+  const value = useLiveValue(data, loading, currentGroupId, setCurrentGroupId, prices, requestSymbols, refresh)
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 
@@ -164,6 +189,7 @@ function useLiveValue(
   currentGroupId: string | null,
   setCurrentGroupId: (id: string | null) => void,
   prices: PriceMap,
+  requestSymbols: (pairs: Pair[]) => void,
   refresh: () => Promise<void>
 ): AppContextValue {
   const currentGroup = data.groups.find((g) => g.id === currentGroupId) ?? null
@@ -186,6 +212,7 @@ function useLiveValue(
     currentGroupId,
     setCurrentGroupId,
     prices,
+    requestSymbols,
     addTrade: wrap((t: Omit<Trade, 'id' | 'created_at' | 'user'>) => insertTrade(t)),
     removeTrade: wrap((id: string) => qDeleteTrade(id)),
     addWatchlist: wrap((w: Omit<WatchlistItem, 'id' | 'created_at' | 'user'>) =>
@@ -237,7 +264,7 @@ function DevProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const profile = DEV_USERS.find((u) => u.id === userId) ?? null
-  const prices = usePrices(useMemo(() => [...trades, ...watchlist], [trades, watchlist]))
+  const { prices, requestSymbols } = usePriceEngine(useMemo(() => [...trades, ...watchlist], [trades, watchlist]))
 
   const profilesById = useMemo(() => {
     const m: Record<string, Profile> = {}
@@ -264,6 +291,7 @@ function DevProvider({ children }: { children: ReactNode }) {
     currentGroupId: DEV_GROUP.id,
     setCurrentGroupId: () => {},
     prices,
+    requestSymbols,
     addTrade: async (t) => {
       setTrades((prev) => [
         ...prev,
