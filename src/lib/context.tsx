@@ -14,9 +14,12 @@ import type {
   Group,
   Membership,
   Profile,
+  Signal,
+  SignalInput,
   Trade,
   WatchlistItem,
 } from '@/types'
+import { createClient } from '@/lib/supabase/client'
 import {
   DEV_GROUP,
   DEV_MEMBERSHIPS,
@@ -42,6 +45,10 @@ import {
   sendConnection as qSendConnection,
   acceptConnection as qAcceptConnection,
   removeConnection as qRemoveConnection,
+  postSignal as qPostSignal,
+  deleteSignal as qDeleteSignal,
+  setGroupSignalMute as qSetGroupSignalMute,
+  fetchSignal,
 } from '@/lib/queries'
 import { uniqueSymbols } from '@/lib/portfolio'
 import { fetchPrices, cachedPrices, PRICE_TTL_MS, type PriceMap, type Pair } from '@/lib/price-store'
@@ -77,7 +84,20 @@ interface AppContextValue extends AppData {
   connectByUsername: (username: string) => Promise<{ ok: boolean; message: string }>
   acceptConnection: (id: string) => Promise<void>
   removeConnection: (id: string) => Promise<void>
+  // Signals
+  postSignal: (input: SignalInput) => Promise<void>
+  removeSignal: (id: string) => Promise<void>
+  setSignalMute: (groupId: string, muted: boolean) => Promise<void>
+  // Transient in-app toast (fired by Realtime signal arrivals)
+  toast: ToastData | null
+  dismissToast: () => void
   refresh: () => Promise<void>
+}
+
+export interface ToastData {
+  title: string
+  body?: string
+  url?: string
 }
 
 const Ctx = createContext<AppContextValue | null>(null)
@@ -154,9 +174,26 @@ function LiveProvider({ children }: { children: ReactNode }) {
     trades: [],
     watchlist: [],
     connections: [],
+    signals: [],
+    mutedGroups: [],
   })
   const [loading, setLoading] = useState(true)
   const [currentGroupId, setCurrentGroupIdState] = useState<string | null>(null)
+  const [toast, setToast] = useState<ToastData | null>(null)
+  // Live refs so the (once-created) Realtime channel always sees current data.
+  const dataRef = useRef(data)
+  dataRef.current = data
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const showToast = useCallback((t: ToastData) => {
+    setToast(t)
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 6000)
+  }, [])
+  const dismissToast = useCallback(() => {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    setToast(null)
+  }, [])
 
   const refresh = useCallback(async () => {
     const d = await loadAppData()
@@ -182,14 +219,105 @@ function LiveProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // Realtime: live-append new signals across my groups + toast for others'.
+  // Gated on the signed-in user so the channel authenticates against RLS.
+  const meId = data.profile?.id
+  useEffect(() => {
+    if (!meId) return
+    const supabase = createClient()
+    const channel = supabase
+      .channel('signals-feed')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'signals' },
+        async (payload) => {
+          const row = payload.new as Signal
+          const d = dataRef.current
+          if (!d.groups.some((g) => g.id === row.group_id)) return // safety net
+          if (d.signals.some((s) => s.id === row.id)) return // already have it
+          let signal: Signal = { ...row, author: d.profilesById[row.author_id] }
+          if (!signal.author) {
+            const fetched = await fetchSignal(row.id)
+            if (fetched) signal = fetched
+          }
+          setData((prev) =>
+            prev.signals.some((s) => s.id === signal.id)
+              ? prev
+              : {
+                  ...prev,
+                  signals: [signal, ...prev.signals].slice(0, 200),
+                  profilesById: signal.author
+                    ? { ...prev.profilesById, [signal.author.id]: signal.author }
+                    : prev.profilesById,
+                }
+          )
+          if (row.author_id !== d.profile?.id && !d.mutedGroups.includes(row.group_id)) {
+            showToast({
+              title: `${row.action} ${row.symbol}`,
+              body: `${signal.author?.name ?? 'Someone'} · ₹${Number(row.price).toLocaleString('en-IN')}${row.note ? ` — ${row.note}` : ''}`,
+              url: `/group?g=${row.group_id}&tab=signals`,
+            })
+          }
+        }
+      )
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [showToast, meId])
+
+  const postSignal = useCallback(async (input: SignalInput) => {
+    const signal = await qPostSignal(input)
+    setData((prev) =>
+      prev.signals.some((s) => s.id === signal.id)
+        ? prev
+        : {
+            ...prev,
+            signals: [signal, ...prev.signals].slice(0, 200),
+            profilesById: signal.author
+              ? { ...prev.profilesById, [signal.author.id]: signal.author }
+              : prev.profilesById,
+          }
+    )
+  }, [])
+
+  const removeSignal = useCallback(async (id: string) => {
+    await qDeleteSignal(id)
+    setData((prev) => ({ ...prev, signals: prev.signals.filter((s) => s.id !== id) }))
+  }, [])
+
+  const setSignalMute = useCallback(async (groupId: string, muted: boolean) => {
+    await qSetGroupSignalMute(groupId, muted)
+    setData((prev) => ({
+      ...prev,
+      mutedGroups: muted
+        ? Array.from(new Set([...prev.mutedGroups, groupId]))
+        : prev.mutedGroups.filter((g) => g !== groupId),
+    }))
+  }, [])
+
   const priceRows = useMemo(
     () => [...data.trades, ...data.watchlist],
     [data.trades, data.watchlist]
   )
   const { prices, requestSymbols, refreshPrices } = usePriceEngine(priceRows)
 
-  const value = useLiveValue(data, loading, currentGroupId, setCurrentGroupId, prices, requestSymbols, refreshPrices, refresh)
+  const value = useLiveValue(data, loading, currentGroupId, setCurrentGroupId, prices, requestSymbols, refreshPrices, refresh, {
+    postSignal,
+    removeSignal,
+    setSignalMute,
+    toast,
+    dismissToast,
+  })
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
+}
+
+interface SignalExtras {
+  postSignal: (input: SignalInput) => Promise<void>
+  removeSignal: (id: string) => Promise<void>
+  setSignalMute: (groupId: string, muted: boolean) => Promise<void>
+  toast: ToastData | null
+  dismissToast: () => void
 }
 
 function useLiveValue(
@@ -200,7 +328,8 @@ function useLiveValue(
   prices: PriceMap,
   requestSymbols: (pairs: Pair[]) => void,
   refreshPrices: () => Promise<void>,
-  refresh: () => Promise<void>
+  refresh: () => Promise<void>,
+  extras: SignalExtras
 ): AppContextValue {
   const currentGroup = data.groups.find((g) => g.id === currentGroupId) ?? null
   const members = Object.values(data.profilesById)
@@ -259,6 +388,11 @@ function useLiveValue(
     },
     acceptConnection: wrap((id: string) => qAcceptConnection(id)),
     removeConnection: wrap((id: string) => qRemoveConnection(id)),
+    postSignal: extras.postSignal,
+    removeSignal: extras.removeSignal,
+    setSignalMute: extras.setSignalMute,
+    toast: extras.toast,
+    dismissToast: extras.dismissToast,
     refresh,
   }
 }
@@ -295,6 +429,8 @@ function DevProvider({ children }: { children: ReactNode }) {
     trades,
     watchlist,
     connections: [] as Connection[],
+    signals: [],
+    mutedGroups: [],
     loading: false,
     isDevMode: true,
     user: profile,
@@ -329,6 +465,11 @@ function DevProvider({ children }: { children: ReactNode }) {
     connectByUsername: async () => ({ ok: false, message: 'Connections need Supabase (disable dev mode).' }),
     acceptConnection: noop,
     removeConnection: noop,
+    postSignal: noop,
+    removeSignal: noop,
+    setSignalMute: noop,
+    toast: null,
+    dismissToast: () => {},
     refresh: noop,
   }
 

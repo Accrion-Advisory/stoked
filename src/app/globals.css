@@ -125,6 +125,9 @@ body::-webkit-scrollbar,
 .spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--border-strong); border-top-color: var(--green); animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+.toast-in { transform: translateX(-50%); animation: toastIn 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
+@keyframes toastIn { from { transform: translate(-50%, -18px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+
 /* Animated brand logo used for loaders — breathes and glows green. */
 .logo-pulse { animation: logoPulse 1.4s ease-in-out infinite; will-change: transform, filter, opacity; }
 @keyframes logoPulse {

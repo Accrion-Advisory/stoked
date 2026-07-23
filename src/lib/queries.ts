@@ -4,6 +4,8 @@ import type {
   Group,
   Membership,
   Profile,
+  Signal,
+  SignalInput,
   Trade,
   WatchlistItem,
 } from '@/types'
@@ -16,6 +18,8 @@ export interface AppData {
   trades: Trade[] // everything I'm allowed to see (mine + visible others)
   watchlist: WatchlistItem[] // everything I'm allowed to see
   connections: Connection[] // mine, annotated with direction + other party
+  signals: Signal[] // recent signals across my groups (newest first)
+  mutedGroups: string[] // group_ids I've muted signal push for
 }
 
 const EMPTY: AppData = {
@@ -26,6 +30,8 @@ const EMPTY: AppData = {
   trades: [],
   watchlist: [],
   connections: [],
+  signals: [],
+  mutedGroups: [],
 }
 
 /**
@@ -49,7 +55,7 @@ export async function loadAppData(): Promise<AppData> {
   const groupIds = (myMemberships ?? []).map((m) => m.group_id)
 
   // 2. Everything else in parallel.
-  const [groupsRes, membershipsRes, tradesRes, watchlistRes, connectionsRes] =
+  const [groupsRes, membershipsRes, tradesRes, watchlistRes, connectionsRes, signalsRes, mutesRes] =
     await Promise.all([
       groupIds.length
         ? supabase.from('groups').select('*').in('id', groupIds)
@@ -67,12 +73,18 @@ export async function loadAppData(): Promise<AppData> {
         .select(
           '*, requester:profiles!connections_requester_id_fkey(*), addressee:profiles!connections_addressee_id_fkey(*)'
         ),
+      groupIds.length
+        ? supabase.from('signals').select('*, author:profiles(*)').in('group_id', groupIds).order('created_at', { ascending: false }).limit(100)
+        : Promise.resolve({ data: [] as Signal[] }),
+      supabase.from('signal_mutes').select('group_id'),
     ])
 
   const groups = (groupsRes.data ?? []) as Group[]
   const memberships = (membershipsRes.data ?? []) as Membership[]
   const trades = (tradesRes.data ?? []) as Trade[]
   const watchlist = (watchlistRes.data ?? []) as WatchlistItem[]
+  const signals = (signalsRes.data ?? []) as Signal[]
+  const mutedGroups = ((mutesRes.data ?? []) as { group_id: string }[]).map((m) => m.group_id)
 
   // Annotate connections from the current user's perspective.
   const connections: Connection[] = ((connectionsRes.data ?? []) as any[]).map((c) => {
@@ -88,6 +100,7 @@ export async function loadAppData(): Promise<AppData> {
   for (const t of trades) if (t.user) profilesById[t.user.id] = t.user
   for (const w of watchlist) if (w.user) profilesById[w.user.id] = w.user
   for (const c of connections) if (c.other) profilesById[c.other.id] = c.other
+  for (const s of signals) if (s.author) profilesById[s.author.id] = s.author
 
   return {
     profile: (profile as Profile) ?? null,
@@ -97,6 +110,8 @@ export async function loadAppData(): Promise<AppData> {
     trades,
     watchlist,
     connections,
+    signals,
+    mutedGroups,
   }
 }
 
@@ -289,4 +304,48 @@ export async function searchSecurities(q: string, limit = 20): Promise<Security[
   const { data, error } = await supabase.rpc('search_securities', { q: query, lim: limit })
   if (error) return []
   return (data ?? []) as Security[]
+}
+
+// ---- Signals ----------------------------------------------------------------
+
+// Posting goes through the API route so it can fan out Web Push to members.
+export async function postSignal(input: SignalInput): Promise<Signal> {
+  const res = await fetch('/api/signals', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  })
+  const json = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(json.error || 'Could not post signal')
+  return json.signal as Signal
+}
+
+export async function deleteSignal(id: string) {
+  const supabase = createClient()
+  const { error } = await supabase.from('signals').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function setGroupSignalMute(groupId: string, muted: boolean) {
+  const supabase = createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+  if (muted) {
+    const { error } = await supabase
+      .from('signal_mutes')
+      .upsert({ user_id: user.id, group_id: groupId }, { onConflict: 'user_id,group_id' })
+    if (error) throw error
+  } else {
+    const { error } = await supabase.from('signal_mutes').delete().eq('user_id', user.id).eq('group_id', groupId)
+    if (error) throw error
+  }
+}
+
+// Fetch a single signal (used to enrich a Realtime INSERT payload with author).
+export async function fetchSignal(id: string): Promise<Signal | null> {
+  const supabase = createClient()
+  const { data } = await supabase.from('signals').select('*, author:profiles(*)').eq('id', id).maybeSingle()
+  return (data as Signal) ?? null
 }

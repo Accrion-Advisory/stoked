@@ -100,6 +100,28 @@ export interface StockPrice {
   is_market_open: boolean
 }
 
+export interface Signal {
+  id: string
+  group_id: string
+  author_id: string
+  symbol: string
+  exchange: 'NSE' | 'BSE'
+  action: 'BUY' | 'SELL'
+  price: number
+  note?: string | null
+  created_at: string
+  author?: User
+}
+
+export interface SignalInput {
+  group_id: string
+  symbol: string
+  exchange: 'NSE' | 'BSE'
+  action: 'BUY' | 'SELL'
+  price: number
+  note?: string
+}
+
 export interface MemberPortfolio {
   user: User
   holdings: Holding[]

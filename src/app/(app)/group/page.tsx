@@ -1,6 +1,6 @@
 'use client'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useApp } from '@/lib/context'
 import { buildMemberPortfolio } from '@/lib/portfolio'
 import { formatCurrency, formatPercent } from '@/lib/utils'
@@ -8,18 +8,28 @@ import Avatar from '@/components/ui/Avatar'
 import PnlBadge from '@/components/ui/PnlBadge'
 import EmptyGroup from '@/components/group/EmptyGroup'
 import PageHeader from '@/components/layout/PageHeader'
+import SignalsPanel from '@/components/signals/SignalsPanel'
 import { usePullToRefresh, PullIndicator } from '@/components/ui/PullToRefresh'
 import Link from 'next/link'
 
 const MEDALS = ['🥇', '🥈', '🥉']
 
 export default function GroupPage() {
+  return (
+    <Suspense fallback={null}>
+      <GroupInner />
+    </Suspense>
+  )
+}
+
+function GroupInner() {
   const {
-    user, currentGroup, currentGroupId,
+    user, currentGroup, currentGroupId, setCurrentGroupId,
     memberships, profilesById, trades, prices, leaveGroup, setGroupVisibility, refresh,
   } = useApp()
   const router = useRouter()
-  const [tab, setTab] = useState<'leaderboard' | 'members' | 'invite'>('leaderboard')
+  const params = useSearchParams()
+  const [tab, setTab] = useState<'leaderboard' | 'signals' | 'members' | 'invite'>('leaderboard')
   const [origin, setOrigin] = useState('')
   const [copied, setCopied] = useState(false)
 
@@ -27,6 +37,13 @@ export default function GroupPage() {
     await Promise.all([refresh(), new Promise((r) => setTimeout(r, 700))])
   }, [refresh])
   const { pull, refreshing, dragging } = usePullToRefresh(handleRefresh)
+
+  // Deep-link support: /group?g=<id>&tab=signals (from push notifications).
+  useEffect(() => {
+    const g = params.get('g')
+    if (g) setCurrentGroupId(g)
+    if (params.get('tab') === 'signals') setTab('signals')
+  }, [params, setCurrentGroupId])
 
   useEffect(() => setOrigin(window.location.origin), [])
 
@@ -74,7 +91,7 @@ export default function GroupPage() {
         )}
         below={(
           <div style={{ display: 'flex' }}>
-            {[{ id: 'leaderboard', label: 'Leaderboard' }, { id: 'members', label: 'Members' }, { id: 'invite', label: 'Invite' }].map((t) => (
+            {[{ id: 'leaderboard', label: 'Ranks' }, { id: 'signals', label: 'Signals' }, { id: 'members', label: 'Members' }, { id: 'invite', label: 'Invite' }].map((t) => (
               <button key={t.id} onClick={() => setTab(t.id as typeof tab)}
                 style={{ flex: 1, padding: '9px 0 4px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: tab === t.id ? 700 : 500, color: tab === t.id ? 'var(--text-primary)' : 'var(--text-secondary)', borderBottom: tab === t.id ? '2px solid var(--green)' : '2px solid transparent', fontFamily: 'Satoshi, sans-serif' }}>
                 {t.label}
@@ -85,6 +102,9 @@ export default function GroupPage() {
       />
 
       <PullIndicator pull={pull} refreshing={refreshing} dragging={dragging} />
+
+      {/* Signals */}
+      {tab === 'signals' && <SignalsPanel groupId={currentGroup.id} />}
 
       {/* Leaderboard */}
       {tab === 'leaderboard' && (
