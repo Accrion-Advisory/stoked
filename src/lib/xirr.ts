@@ -153,7 +153,10 @@ export function calculateHoldings(trades: Trade[]): {
       symbol: h.symbol,
       exchange: h.exchange,
       quantity: h.quantity,
-      avg_price: h.quantity > 0 ? h.total_invested / h.quantity : 0,
+      // Average PURCHASE price (weighted, excluding brokerage/charges) — this is
+      // the per-share price the user actually paid. Charges still live in
+      // total_invested for cost-basis / P&L.
+      avg_price: h.quantity > 0 ? h.buyLots.reduce((s, l) => s + l.qty * l.price, 0) / h.quantity : 0,
       total_invested: h.total_invested,
       first_buy_date: h.first_buy_date,
       trades: h.trades,

@@ -115,6 +115,23 @@ export async function deleteTrade(id: string) {
   if (error) throw error
 }
 
+export type TradePatch = Partial<
+  Pick<Trade, 'symbol' | 'exchange' | 'type' | 'quantity' | 'price' | 'date' | 'charges' | 'notes'>
+>
+
+export async function updateTrade(id: string, patch: TradePatch) {
+  const supabase = createClient()
+  const { error } = await supabase.from('trades').update(patch).eq('id', id)
+  if (error) throw error
+}
+
+export async function deleteTrades(ids: string[]) {
+  if (!ids.length) return
+  const supabase = createClient()
+  const { error } = await supabase.from('trades').delete().in('id', ids)
+  if (error) throw error
+}
+
 export async function insertWatchlist(
   input: Omit<WatchlistItem, 'id' | 'created_at' | 'user'>
 ) {

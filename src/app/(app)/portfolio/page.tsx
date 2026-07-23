@@ -1,14 +1,18 @@
 'use client'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useApp } from '@/lib/context'
 import { buildMemberPortfolio } from '@/lib/portfolio'
 import { formatCurrency, formatPercent } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
 import PnlBadge from '@/components/ui/PnlBadge'
+import HoldingRow from '@/components/portfolio/HoldingRow'
+import TradeActionsSheet from '@/components/portfolio/TradeActionsSheet'
 import Link from 'next/link'
+import { Holding } from '@/types'
 
 export default function PortfolioPage() {
-  const { user, trades, prices } = useApp()
+  const { user, trades, prices, removeTrades } = useApp()
+  const [sheet, setSheet] = useState<Holding | null>(null)
 
   const myTrades = useMemo(() => trades.filter((t) => t.user_id === user?.id), [trades, user?.id])
   const p = useMemo(
@@ -18,6 +22,12 @@ export default function PortfolioPage() {
 
   if (!user || !p) return null
   const { holdings, total_invested, current_value, total_pnl, total_pnl_percent, xirr } = p
+
+  function deleteHolding(h: Holding) {
+    if (window.confirm(`Delete all ${h.trades.length} ${h.symbol} trade(s)? This can't be undone.`)) {
+      removeTrades(h.trades.map((t) => t.id))
+    }
+  }
 
   return (
     <div className="mb-nav">
@@ -63,7 +73,9 @@ export default function PortfolioPage() {
       <div style={{ padding: '0 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
           <div style={sectionLabel}>Holdings · {holdings.length}</div>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Prices ~15min delayed</div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span className="live-dot" /> Auto-updating
+          </div>
         </div>
 
         {holdings.length === 0 && (
@@ -74,32 +86,20 @@ export default function PortfolioPage() {
           </div>
         )}
 
-        {holdings.map((h) => {
-          const pct = h.pnl_percent ?? 0
-          const pnl = h.pnl ?? 0
-          return (
-            <Link key={`${h.symbol}.${h.exchange}`} href={`/stock/${h.symbol}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid var(--border)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={logoBox}>{h.symbol.slice(0, 3)}</div>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>
-                    {h.symbol}
-                    <span className="chip chip-nse" style={{ marginLeft: 6, fontSize: 10 }}>{h.exchange}</span>
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                    {h.quantity} shares · avg ₹{h.avg_price.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                  </div>
-                </div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <PnlBadge value={pct} type="percent" size="sm" />
-                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
-                  {pnl >= 0 ? '+' : ''}₹{Math.abs(pnl).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                </div>
-              </div>
-            </Link>
-          )
-        })}
+        {holdings.map((h) => (
+          <HoldingRow
+            key={`${h.symbol}.${h.exchange}`}
+            holding={h}
+            onOpenActions={() => setSheet(h)}
+            onDelete={() => deleteHolding(h)}
+          />
+        ))}
+
+        {holdings.length > 0 && (
+          <div style={{ fontSize: 11, color: 'var(--text-tertiary)', textAlign: 'center', padding: '14px 0 0' }}>
+            Long-press or swipe a holding to edit / delete
+          </div>
+        )}
       </div>
 
       {/* Allocation */}
@@ -119,6 +119,8 @@ export default function PortfolioPage() {
           </div>
         </div>
       )}
+
+      {sheet && <TradeActionsSheet holding={sheet} onClose={() => setSheet(null)} />}
     </div>
   )
 }
@@ -127,4 +129,3 @@ const statCard: React.CSSProperties = { background: 'linear-gradient(180deg, rgb
 const statLabel: React.CSSProperties = { fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 6 }
 const statBig: React.CSSProperties = { fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em' }
 const sectionLabel: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', letterSpacing: '0.08em', textTransform: 'uppercase' }
-const logoBox: React.CSSProperties = { width: 40, height: 40, borderRadius: 10, background: 'var(--bg-elevated)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: 'var(--text-secondary)' }

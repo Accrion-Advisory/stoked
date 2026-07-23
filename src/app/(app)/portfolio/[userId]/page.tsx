@@ -87,11 +87,10 @@ export default function MemberPortfolioPage() {
             <Link key={`${h.symbol}.${h.exchange}`} href={`/stock/${h.symbol}`} style={{ textDecoration: 'none', padding: '14px 0', borderBottom: '1px solid var(--border)', display: 'block' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: latestNote ? 8 : 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={logoBox}>{h.symbol.slice(0, 3)}</div>
                   <div>
                     <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>{h.symbol}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                      {h.quantity} qty · avg ₹{h.avg_price.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                      {h.quantity} qty · avg ₹{h.avg_price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>Since {formatDate(h.first_buy_date)}</div>
                   </div>
@@ -141,4 +140,3 @@ const statCard: React.CSSProperties = { background: 'linear-gradient(180deg, rgb
 const statLabel: React.CSSProperties = { fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 4 }
 const statBig: React.CSSProperties = { fontSize: 20, fontWeight: 800 }
 const sectionLabel: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }
-const logoBox: React.CSSProperties = { width: 40, height: 40, borderRadius: 10, background: 'var(--bg-elevated)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: 'var(--text-secondary)' }

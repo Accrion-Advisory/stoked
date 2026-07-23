@@ -29,6 +29,9 @@ import {
   loadAppData,
   insertTrade,
   deleteTrade as qDeleteTrade,
+  deleteTrades as qDeleteTrades,
+  updateTrade as qUpdateTrade,
+  type TradePatch,
   insertWatchlist,
   deleteWatchlist as qDeleteWatchlist,
   createGroup as qCreateGroup,
@@ -60,7 +63,9 @@ interface AppContextValue extends AppData {
   requestSymbols: (pairs: Pair[]) => void
   // Mutations
   addTrade: (t: Omit<Trade, 'id' | 'created_at' | 'user'>) => Promise<void>
+  updateTrade: (id: string, patch: TradePatch) => Promise<void>
   removeTrade: (id: string) => Promise<void>
+  removeTrades: (ids: string[]) => Promise<void>
   addWatchlist: (w: Omit<WatchlistItem, 'id' | 'created_at' | 'user'>) => Promise<void>
   removeWatchlist: (id: string) => Promise<void>
   createGroup: (name: string) => Promise<Group | null>
@@ -214,7 +219,9 @@ function useLiveValue(
     prices,
     requestSymbols,
     addTrade: wrap((t: Omit<Trade, 'id' | 'created_at' | 'user'>) => insertTrade(t)),
+    updateTrade: wrap((id: string, patch: TradePatch) => qUpdateTrade(id, patch)),
     removeTrade: wrap((id: string) => qDeleteTrade(id)),
+    removeTrades: wrap((ids: string[]) => qDeleteTrades(ids)),
     addWatchlist: wrap((w: Omit<WatchlistItem, 'id' | 'created_at' | 'user'>) =>
       insertWatchlist(w)
     ),
@@ -298,7 +305,9 @@ function DevProvider({ children }: { children: ReactNode }) {
         { ...t, id: `trade-${Date.now()}`, created_at: new Date().toISOString() },
       ])
     },
+    updateTrade: async (id, patch) => setTrades((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t))),
     removeTrade: async (id) => setTrades((prev) => prev.filter((t) => t.id !== id)),
+    removeTrades: async (ids) => setTrades((prev) => prev.filter((t) => !ids.includes(t.id))),
     addWatchlist: async (w) => {
       setWatchlist((prev) => [
         ...prev,
