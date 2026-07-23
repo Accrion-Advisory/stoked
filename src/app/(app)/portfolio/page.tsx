@@ -1,13 +1,12 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useApp } from '@/lib/context'
 import { buildMemberPortfolio } from '@/lib/portfolio'
 import { formatCurrency, formatPercent } from '@/lib/utils'
-import Avatar from '@/components/ui/Avatar'
 import PnlBadge from '@/components/ui/PnlBadge'
 import HoldingRow from '@/components/portfolio/HoldingRow'
 import TradeActionsSheet from '@/components/portfolio/TradeActionsSheet'
-import PullToRefresh from '@/components/ui/PullToRefresh'
+import { usePullToRefresh, PullIndicator } from '@/components/ui/PullToRefresh'
 import Link from 'next/link'
 import { Holding } from '@/types'
 
@@ -15,10 +14,11 @@ export default function PortfolioPage() {
   const { user, trades, prices, removeTrades, refreshPrices } = useApp()
   const [sheet, setSheet] = useState<Holding | null>(null)
 
-  async function handleRefresh() {
+  const handleRefresh = useCallback(async () => {
     // Keep the animation visible for a beat so the refresh feels substantial.
     await Promise.all([refreshPrices(), new Promise((r) => setTimeout(r, 700))])
-  }
+  }, [refreshPrices])
+  const { pull, refreshing, dragging } = usePullToRefresh(handleRefresh)
 
   const myTrades = useMemo(() => trades.filter((t) => t.user_id === user?.id), [trades, user?.id])
   const p = useMemo(
@@ -37,13 +37,11 @@ export default function PortfolioPage() {
 
   return (
     <div className="mb-nav" style={{ position: 'relative' }}>
-     <PullToRefresh onRefresh={handleRefresh}>
       {/* Header */}
-      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 44px) 20px 20px' }}>
+      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 52px) 20px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <Avatar name={user.name} userId={user.id} size="lg" />
           <div>
-            <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 2 }}>{user.name}</div>
+            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 2, letterSpacing: '-0.01em' }}>{user.name}</div>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>@{user.username}</div>
           </div>
           <div style={{ marginLeft: 'auto' }}>
@@ -84,6 +82,9 @@ export default function PortfolioPage() {
             <span className="live-dot" /> Auto-updating
           </div>
         </div>
+
+        {/* Pull-to-refresh indicator sits above the holdings table */}
+        <PullIndicator pull={pull} refreshing={refreshing} dragging={dragging} />
 
         {holdings.length === 0 && (
           <div style={{ padding: '40px 0', textAlign: 'center' }}>
@@ -126,7 +127,6 @@ export default function PortfolioPage() {
           </div>
         </div>
       )}
-     </PullToRefresh>
 
       {sheet && <TradeActionsSheet holding={sheet} onClose={() => setSheet(null)} />}
     </div>

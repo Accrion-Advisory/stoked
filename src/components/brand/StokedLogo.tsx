@@ -17,7 +17,7 @@ export function LogoLoader({ size = 46, label }: { size?: number; label?: string
   )
 }
 
-/** Subtle fixed watermark shown on every in-app page. */
+/** Fixed brand mark shown top-left on every in-app page. */
 export function BrandWatermark() {
-  return <StokedMark size={20} className="brand-watermark" />
+  return <StokedMark size={30} className="brand-watermark" />
 }

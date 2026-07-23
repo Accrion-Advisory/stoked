@@ -197,8 +197,12 @@ export default function ConnectPage() {
       )}
 
       {/* Footer */}
-      <div style={{ marginTop: 40, paddingTop: 24, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-        <Link href="/about" style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 600, textDecoration: 'none' }}>About STOKED</Link>
+      <div style={{ marginTop: 40, paddingTop: 24, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+        <Link href="/about" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '11px 20px', borderRadius: 999, border: '1px solid var(--border-strong)', background: 'var(--bg-elevated)', color: 'var(--green)', fontSize: 14, fontWeight: 700 }}>
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
+          About STOKED
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="9,18 15,12 9,6" /></svg>
+        </Link>
         <AccrionBadge href="/about" />
       </div>
     </div>
