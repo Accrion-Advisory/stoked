@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
   const { data: signal, error } = await supabase
     .from('signals')
     .insert({ group_id, author_id: user.id, symbol, exchange, action, price, note: note || null })
-    .select('*, author:profiles(*)')
+    .select('*, author:profiles!signals_author_id_fkey(*)')
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 403 })
 

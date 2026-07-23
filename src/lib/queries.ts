@@ -75,7 +75,7 @@ export async function loadAppData(): Promise<AppData> {
           '*, requester:profiles!connections_requester_id_fkey(*), addressee:profiles!connections_addressee_id_fkey(*)'
         ),
       groupIds.length
-        ? supabase.from('signals').select('*, author:profiles(*)').in('group_id', groupIds).order('created_at', { ascending: false }).limit(100)
+        ? supabase.from('signals').select('*, author:profiles!signals_author_id_fkey(*)').in('group_id', groupIds).order('created_at', { ascending: false }).limit(100)
         : Promise.resolve({ data: [] as Signal[] }),
       supabase.from('signal_mutes').select('group_id'),
     ])
@@ -365,7 +365,7 @@ export async function setGroupSignalMute(groupId: string, muted: boolean) {
 // Fetch a single signal (used to enrich a Realtime INSERT payload with author).
 export async function fetchSignal(id: string): Promise<Signal | null> {
   const supabase = createClient()
-  const { data } = await supabase.from('signals').select('*, author:profiles(*)').eq('id', id).maybeSingle()
+  const { data } = await supabase.from('signals').select('*, author:profiles!signals_author_id_fkey(*)').eq('id', id).maybeSingle()
   return (data as Signal) ?? null
 }
 
