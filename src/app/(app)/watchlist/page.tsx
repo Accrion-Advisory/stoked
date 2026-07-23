@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useApp } from '@/lib/context'
 import { priceKey } from '@/lib/portfolio'
 import Avatar from '@/components/ui/Avatar'
+import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
 import StockSearch from '@/components/stock/StockSearch'
 
@@ -38,24 +39,26 @@ export default function WatchlistPage() {
 
   return (
     <div className="mb-nav">
-      {/* Header */}
-      <div style={{ padding: '52px 20px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <span style={{ fontSize: 22, fontWeight: 800 }}>Watchlist</span>
+      <PageHeader
+        title="Watchlist"
+        right={(
           <button onClick={() => setShowAdd((s) => !s)} style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--bg-elevated)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth={2.5} strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
           </button>
-        </div>
+        )}
+        below={(
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, background: 'var(--bg-elevated)', borderRadius: 12, padding: 4 }}>
+            {[{ id: 'mine', label: 'My Watchlist' }, { id: 'group', label: 'Group Watchlist' }].map((t) => (
+              <button key={t.id} onClick={() => setActiveTab(t.id as 'mine' | 'group')}
+                style={{ padding: '10px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, background: activeTab === t.id ? 'var(--bg-overlay, #1E2128)' : 'transparent', color: activeTab === t.id ? 'var(--text-primary)' : 'var(--text-secondary)', fontFamily: 'Satoshi, sans-serif' }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
+      />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, background: 'var(--bg-elevated)', borderRadius: 12, padding: 4 }}>
-          {[{ id: 'mine', label: 'My Watchlist' }, { id: 'group', label: 'Group Watchlist' }].map((t) => (
-            <button key={t.id} onClick={() => setActiveTab(t.id as 'mine' | 'group')}
-              style={{ padding: '10px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, background: activeTab === t.id ? 'var(--bg-overlay, #1E2128)' : 'transparent', color: activeTab === t.id ? 'var(--text-primary)' : 'var(--text-secondary)', fontFamily: 'Satoshi, sans-serif' }}>
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <div style={{ height: 16 }} />
 
       {/* Add stock panel */}
       {showAdd && (

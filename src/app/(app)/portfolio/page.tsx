@@ -6,6 +6,7 @@ import { formatCurrency, formatPercent } from '@/lib/utils'
 import PnlBadge from '@/components/ui/PnlBadge'
 import HoldingRow from '@/components/portfolio/HoldingRow'
 import TradeActionsSheet from '@/components/portfolio/TradeActionsSheet'
+import PageHeader from '@/components/layout/PageHeader'
 import { usePullToRefresh, PullIndicator } from '@/components/ui/PullToRefresh'
 import Link from 'next/link'
 import { Holding } from '@/types'
@@ -37,20 +38,18 @@ export default function PortfolioPage() {
 
   return (
     <div className="mb-nav" style={{ position: 'relative' }}>
-      {/* Header */}
-      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 52px) 20px 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <div>
-            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 2, letterSpacing: '-0.01em' }}>{user.name}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>@{user.username}</div>
-          </div>
-          <div style={{ marginLeft: 'auto' }}>
-            <span style={{ background: 'var(--blue-dim)', color: 'var(--blue)', padding: '4px 10px', borderRadius: 8, fontSize: 13, fontWeight: 700 }}>
-              XIRR {formatPercent(xirr)}
-            </span>
-          </div>
-        </div>
+      <PageHeader
+        title={user.name}
+        subtitle={`@${user.username}`}
+        right={(
+          <span style={{ background: 'var(--blue-dim)', color: 'var(--blue)', padding: '5px 11px', borderRadius: 8, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
+            XIRR {formatPercent(xirr)}
+          </span>
+        )}
+      />
 
+      {/* Portfolio summary */}
+      <div style={{ padding: '18px 20px 0' }}>
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div style={statCard}>
@@ -75,7 +74,7 @@ export default function PortfolioPage() {
       </div>
 
       {/* Holdings */}
-      <div style={{ padding: '0 20px' }}>
+      <div style={{ padding: '18px 20px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
           <div style={sectionLabel}>Holdings · {holdings.length}</div>
           <div style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 5 }}>

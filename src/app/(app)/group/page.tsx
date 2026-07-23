@@ -1,11 +1,14 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useApp } from '@/lib/context'
 import { buildMemberPortfolio } from '@/lib/portfolio'
 import { formatCurrency, formatPercent } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
 import PnlBadge from '@/components/ui/PnlBadge'
 import EmptyGroup from '@/components/group/EmptyGroup'
+import PageHeader from '@/components/layout/PageHeader'
+import { usePullToRefresh, PullIndicator } from '@/components/ui/PullToRefresh'
 import Link from 'next/link'
 
 const MEDALS = ['🥇', '🥈', '🥉']
@@ -13,11 +16,17 @@ const MEDALS = ['🥇', '🥈', '🥉']
 export default function GroupPage() {
   const {
     user, currentGroup, currentGroupId,
-    memberships, profilesById, trades, prices, leaveGroup, setGroupVisibility,
+    memberships, profilesById, trades, prices, leaveGroup, setGroupVisibility, refresh,
   } = useApp()
+  const router = useRouter()
   const [tab, setTab] = useState<'leaderboard' | 'members' | 'invite'>('leaderboard')
   const [origin, setOrigin] = useState('')
   const [copied, setCopied] = useState(false)
+
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([refresh(), new Promise((r) => setTimeout(r, 700))])
+  }, [refresh])
+  const { pull, refreshing, dragging } = usePullToRefresh(handleRefresh)
 
   useEffect(() => setOrigin(window.location.origin), [])
 
@@ -54,34 +63,28 @@ export default function GroupPage() {
 
   return (
     <div className="mb-nav">
-      {/* Header */}
-      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 40px) 20px 16px', borderBottom: '1px solid var(--border)' }}>
-        <Link href="/connect" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600, textDecoration: 'none', marginBottom: 14 }}>
-          <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="15,18 9,12 15,6" /></svg>
-          Connect
-        </Link>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 2 }}>{currentGroup.name}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-              {groupMembers.length} members · {formatCurrency(groupValue, true)} tracked
-            </div>
-          </div>
+      <PageHeader
+        onBack={() => router.push('/connect')}
+        title={currentGroup.name}
+        subtitle={`${groupMembers.length} members · ${formatCurrency(groupValue, true)} tracked`}
+        right={(
           <div style={{ background: groupXirr >= 0 ? 'var(--green-dim)' : 'var(--red-dim)', color: groupXirr >= 0 ? 'var(--green)' : 'var(--red)', padding: '6px 12px', borderRadius: 10, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
             XIRR {formatPercent(groupXirr)}
           </div>
-        </div>
+        )}
+        below={(
+          <div style={{ display: 'flex' }}>
+            {[{ id: 'leaderboard', label: 'Leaderboard' }, { id: 'members', label: 'Members' }, { id: 'invite', label: 'Invite' }].map((t) => (
+              <button key={t.id} onClick={() => setTab(t.id as typeof tab)}
+                style={{ flex: 1, padding: '9px 0 4px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: tab === t.id ? 700 : 500, color: tab === t.id ? 'var(--text-primary)' : 'var(--text-secondary)', borderBottom: tab === t.id ? '2px solid var(--green)' : '2px solid transparent', fontFamily: 'Satoshi, sans-serif' }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
+      />
 
-        {/* Tabs */}
-        <div style={{ display: 'flex' }}>
-          {[{ id: 'leaderboard', label: 'Leaderboard' }, { id: 'members', label: 'Members' }, { id: 'invite', label: 'Invite' }].map((t) => (
-            <button key={t.id} onClick={() => setTab(t.id as typeof tab)}
-              style={{ flex: 1, padding: '10px 0', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: tab === t.id ? 700 : 500, color: tab === t.id ? 'var(--text-primary)' : 'var(--text-secondary)', borderBottom: tab === t.id ? '2px solid var(--green)' : '2px solid transparent', fontFamily: 'Satoshi, sans-serif' }}>
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <PullIndicator pull={pull} refreshing={refreshing} dragging={dragging} />
 
       {/* Leaderboard */}
       {tab === 'leaderboard' && (

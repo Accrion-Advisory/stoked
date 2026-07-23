@@ -1,11 +1,13 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useApp } from '@/lib/context'
 import Avatar from '@/components/ui/Avatar'
 import GroupCreateJoin from '@/components/group/GroupCreateJoin'
 import { AccrionBadge } from '@/components/brand/AccrionBadge'
+import PageHeader from '@/components/layout/PageHeader'
+import { usePullToRefresh, PullIndicator } from '@/components/ui/PullToRefresh'
 import { logout } from '@/app/auth/actions'
 
 type Tab = 'groups' | 'connections' | 'add'
@@ -13,10 +15,15 @@ type Tab = 'groups' | 'connections' | 'add'
 export default function ConnectPage() {
   const {
     user, groups, memberships, connections, profilesById,
-    setCurrentGroupId, connectByUsername, acceptConnection, removeConnection,
+    setCurrentGroupId, connectByUsername, acceptConnection, removeConnection, refresh,
   } = useApp()
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('groups')
+
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([refresh(), new Promise((r) => setTimeout(r, 700))])
+  }, [refresh])
+  const { pull, refreshing, dragging } = usePullToRefresh(handleRefresh)
 
   // Add-connection form state
   const [handle, setHandle] = useState('')
@@ -61,31 +68,34 @@ export default function ConnectPage() {
   ]
 
   return (
-    <div className="mb-nav" style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 44px) 0 0' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px 14px' }}>
-        <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em' }}>Connect</span>
-        <form action={logout}>
-          <button type="submit" style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Satoshi, sans-serif', padding: '7px 14px', borderRadius: 999 }}>
-            Log out
-          </button>
-        </form>
-      </div>
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', padding: '0 20px', borderBottom: '1px solid var(--border)' }}>
-        {TABS.map((t) => {
-          const active = tab === t.id
-          const badge = t.id === 'add' && incoming.length > 0 ? incoming.length : 0
-          return (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              style={{ flex: 1, padding: '11px 0', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13.5, fontWeight: active ? 700 : 500, color: active ? 'var(--text-primary)' : 'var(--text-secondary)', borderBottom: active ? '2px solid var(--green)' : '2px solid transparent', fontFamily: 'Satoshi, sans-serif', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-              {t.label}
-              {badge > 0 && <span style={{ background: 'var(--green)', color: '#04120A', fontSize: 11, fontWeight: 800, borderRadius: 999, minWidth: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>{badge}</span>}
+    <div className="mb-nav">
+      <PageHeader
+        title="Connect"
+        right={(
+          <form action={logout}>
+            <button type="submit" style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Satoshi, sans-serif', padding: '7px 14px', borderRadius: 999 }}>
+              Log out
             </button>
-          )
-        })}
-      </div>
+          </form>
+        )}
+        below={(
+          <div style={{ display: 'flex' }}>
+            {TABS.map((t) => {
+              const active = tab === t.id
+              const badge = t.id === 'add' && incoming.length > 0 ? incoming.length : 0
+              return (
+                <button key={t.id} onClick={() => setTab(t.id)}
+                  style={{ flex: 1, padding: '9px 0 4px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13.5, fontWeight: active ? 700 : 500, color: active ? 'var(--text-primary)' : 'var(--text-secondary)', borderBottom: active ? '2px solid var(--green)' : '2px solid transparent', fontFamily: 'Satoshi, sans-serif', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  {t.label}
+                  {badge > 0 && <span style={{ background: 'var(--green)', color: '#04120A', fontSize: 11, fontWeight: 800, borderRadius: 999, minWidth: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>{badge}</span>}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      />
+
+      <PullIndicator pull={pull} refreshing={refreshing} dragging={dragging} />
 
       {/* ---- GROUPS ---- */}
       {tab === 'groups' && (

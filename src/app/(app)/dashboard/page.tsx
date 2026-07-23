@@ -8,6 +8,7 @@ import { MemberPortfolio } from '@/types'
 import { formatCurrency, formatPercent, timeAgo } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
 import PnlBadge from '@/components/ui/PnlBadge'
+import PageHeader from '@/components/layout/PageHeader'
 
 export default function DashboardPage() {
   const {
@@ -64,16 +65,19 @@ export default function DashboardPage() {
 
   return (
     <div className="mb-nav">
-      {/* Header */}
-      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 40px) 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 2 }}>Welcome back</div>
-          <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em' }}>Hey, {firstName} 👋</div>
-        </div>
-        <Link href="/connect" aria-label="Connect">
-          <Avatar name={user.name} userId={user.id} size="lg" />
-        </Link>
-      </div>
+      <PageHeader
+        title={(
+          <>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Welcome back</div>
+            <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.15 }}>Hey, {firstName} 👋</div>
+          </>
+        )}
+        right={(
+          <Link href="/connect" aria-label="Connect">
+            <Avatar name={user.name} userId={user.id} size="md" />
+          </Link>
+        )}
+      />
 
       {/* My portfolio hero */}
       <div style={{ padding: '14px 20px 0' }}>

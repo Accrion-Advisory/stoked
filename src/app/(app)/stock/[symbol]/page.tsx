@@ -7,6 +7,7 @@ import { priceKey } from '@/lib/portfolio'
 import { formatDate } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
 import PnlBadge from '@/components/ui/PnlBadge'
+import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
 
 const CHART_TABS = ['1W', '1M', '3M', '1Y']
@@ -69,33 +70,28 @@ export default function StockPage() {
 
   return (
     <div className="mb-nav">
-      {/* Header */}
-      <div style={{ padding: '52px 20px 16px', borderBottom: '1px solid var(--border)' }}>
-        <button onClick={() => router.back()} style={backBtn}>
-          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="15,18 9,12 15,6" /></svg>
-          Back
-        </button>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.01em' }}>{sym}</span>
-              <span className="chip" style={{ background: exch === 'NSE' ? 'var(--blue-dim)' : 'var(--gold-dim)', color: exch === 'NSE' ? 'var(--blue)' : 'var(--gold)' }}>{exch}</span>
-              {price && <div className="live-dot" />}
-            </div>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{price?.company_name ?? sym}</div>
-          </div>
+      <PageHeader
+        onBack={() => router.back()}
+        right={(
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em' }} className="num">
+            <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em' }} className="num">
               {price ? `₹${price.price.toLocaleString('en-IN')}` : '—'}
             </div>
             {price && (
-              <div style={{ fontSize: 14, fontWeight: 600, color: isPos ? 'var(--green)' : 'var(--red)' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: isPos ? 'var(--green)' : 'var(--red)' }}>
                 {isPos ? '+' : ''}{price.change.toFixed(2)} ({isPos ? '+' : ''}{pct.toFixed(2)}%)
               </div>
             )}
           </div>
+        )}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 20, fontWeight: 900, letterSpacing: '-0.01em' }}>{sym}</span>
+          <span className="chip" style={{ background: exch === 'NSE' ? 'var(--blue-dim)' : 'var(--gold-dim)', color: exch === 'NSE' ? 'var(--blue)' : 'var(--gold)' }}>{exch}</span>
+          {price && <div className="live-dot" />}
         </div>
-      </div>
+        <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{price?.company_name ?? sym}</div>
+      </PageHeader>
 
       {/* Chart placeholder */}
       <div style={{ padding: '16px 20px 0' }}>
@@ -178,5 +174,4 @@ export default function StockPage() {
   )
 }
 
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: 12, fontSize: 14, padding: 0, display: 'flex', alignItems: 'center', gap: 6 }
 const sectionLabel: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }

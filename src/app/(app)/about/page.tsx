@@ -1,6 +1,7 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { StokedMark } from '@/components/brand/StokedLogo'
+import PageHeader from '@/components/layout/PageHeader'
 
 const POINTS = [
   { icon: '🔒', title: 'Private by default', desc: 'Your holdings are visible only to the circles you join and the people you accept — enforced in the database.' },
@@ -11,11 +12,9 @@ const POINTS = [
 export default function AboutPage() {
   const router = useRouter()
   return (
-    <div className="mb-nav" style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 52px) 20px 0' }}>
-      <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: 24, fontSize: 14, padding: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-        <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="15,18 9,12 15,6" /></svg>
-        Back
-      </button>
+    <div className="mb-nav">
+      <PageHeader onBack={() => router.back()} title="About" />
+      <div style={{ padding: '24px 20px 0' }}>
 
       {/* STOKED hero */}
       <div style={{ textAlign: 'center', marginBottom: 28 }}>
@@ -63,6 +62,7 @@ export default function AboutPage() {
       <div style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
         © {new Date().getFullYear()} Accrion · All rights reserved<br />
         Markets involve risk. STOKED is a tracking tool, not investment advice.
+      </div>
       </div>
     </div>
   )

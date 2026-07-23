@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useApp } from '@/lib/context'
 import { calculateHoldings } from '@/lib/xirr'
 import StockSearch from '@/components/stock/StockSearch'
+import PageHeader from '@/components/layout/PageHeader'
 
 export default function TradePage() {
   return (
@@ -132,17 +133,7 @@ function TradeInner() {
 
   return (
     <div className="mb-nav">
-      {/* Header */}
-      <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 40px) 20px 16px', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="15,18 9,12 15,6" /></svg>
-            Cancel
-          </button>
-          <span style={{ fontSize: 17, fontWeight: 800 }}>{editing ? 'Edit Trade' : 'Add Trade'}</span>
-          <div style={{ width: 60 }} />
-        </div>
-      </div>
+      <PageHeader onBack={() => router.back()} title={editing ? 'Edit Trade' : 'Add Trade'} />
 
       <div style={{ padding: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* BUY / SELL toggle */}

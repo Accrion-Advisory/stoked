@@ -4,8 +4,8 @@ import { useParams, useRouter } from 'next/navigation'
 import { useApp } from '@/lib/context'
 import { buildMemberPortfolio } from '@/lib/portfolio'
 import { formatCurrency, formatDate, formatPercent } from '@/lib/utils'
-import Avatar from '@/components/ui/Avatar'
 import PnlBadge from '@/components/ui/PnlBadge'
+import PageHeader from '@/components/layout/PageHeader'
 import Link from 'next/link'
 
 export default function MemberPortfolioPage() {
@@ -39,23 +39,14 @@ export default function MemberPortfolioPage() {
 
   return (
     <div className="mb-nav">
-      {/* Header */}
-      <div style={{ padding: '52px 20px 20px', borderBottom: '1px solid var(--border)' }}>
-        <button onClick={() => router.back()} style={backBtn}>
-          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="15,18 9,12 15,6" /></svg>
-          Back
-        </button>
+      <PageHeader
+        onBack={() => router.back()}
+        title={isMe ? `${member.name} (you)` : member.name}
+        subtitle={`${holdings.length} holdings · ${memberTrades.length} trades`}
+      />
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
-          <Avatar name={member.name} userId={member.id} size="lg" />
-          <div>
-            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 2 }}>
-              {member.name} {isMe && <span style={{ fontSize: 13, color: 'var(--text-tertiary)', fontWeight: 500 }}>(you)</span>}
-            </div>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{holdings.length} holdings · {memberTrades.length} trades</div>
-          </div>
-        </div>
-
+      {/* Stats */}
+      <div style={{ padding: '18px 20px 0' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
           <div style={statCard}>
             <div style={statLabel}>Current Value</div>
@@ -135,7 +126,6 @@ export default function MemberPortfolioPage() {
   )
 }
 
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginBottom: 16, fontSize: 14, padding: 0, display: 'flex', alignItems: 'center', gap: 6 }
 const statCard: React.CSSProperties = { background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.012)), var(--bg-surface)', borderRadius: 14, padding: '13px 15px', border: '1px solid var(--border)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 30px -22px rgba(0,0,0,0.9)' }
 const statLabel: React.CSSProperties = { fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 4 }
 const statBig: React.CSSProperties = { fontSize: 20, fontWeight: 800 }
