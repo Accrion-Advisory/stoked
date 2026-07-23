@@ -1,6 +1,6 @@
 /**
- * Generates the STOKED icon set + a transparent-background brand mark from
- * logo.png (repo root). Re-run after replacing logo.png.
+ * Generates the STOKED icon set + a transparent-background brand mark from the
+ * source logo (public/brand/logo-source.png). Re-run after replacing it.
  *   node scripts/generate-icons.mjs
  */
 import sharp from 'sharp'
@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const SRC = path.join(root, 'logo.png')
+const SRC = path.join(root, 'public/brand/logo-source.png')
 
 async function main() {
   await mkdir(path.join(root, 'public/icons'), { recursive: true })
