@@ -100,6 +100,8 @@ export interface StockPrice {
   is_market_open: boolean
 }
 
+export type ReactionKind = 'like' | 'acted'
+
 export interface Signal {
   id: string
   group_id: string
@@ -111,6 +113,11 @@ export interface Signal {
   note?: string | null
   created_at: string
   author?: User
+  // Reaction summary (derived)
+  like_count?: number
+  acted_count?: number
+  i_liked?: boolean
+  i_acted?: boolean
 }
 
 export interface SignalInput {

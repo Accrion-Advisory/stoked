@@ -14,6 +14,7 @@ import type {
   Group,
   Membership,
   Profile,
+  ReactionKind,
   Signal,
   SignalInput,
   Trade,
@@ -48,6 +49,7 @@ import {
   postSignal as qPostSignal,
   deleteSignal as qDeleteSignal,
   setGroupSignalMute as qSetGroupSignalMute,
+  toggleReaction as qToggleReaction,
   fetchSignal,
 } from '@/lib/queries'
 import { uniqueSymbols } from '@/lib/portfolio'
@@ -88,6 +90,10 @@ interface AppContextValue extends AppData {
   postSignal: (input: SignalInput) => Promise<void>
   removeSignal: (id: string) => Promise<void>
   setSignalMute: (groupId: string, muted: boolean) => Promise<void>
+  toggleReaction: (signalId: string, kind: ReactionKind) => Promise<void>
+  // Unseen signals (from others) since the user last viewed a Signals tab.
+  newSignalCount: number
+  markSignalsSeen: () => void
   // Transient in-app toast (fired by Realtime signal arrivals)
   toast: ToastData | null
   dismissToast: () => void
@@ -195,6 +201,17 @@ function LiveProvider({ children }: { children: ReactNode }) {
     setToast(null)
   }, [])
 
+  const [signalsSeenAt, setSignalsSeenAt] = useState('1970-01-01T00:00:00Z')
+  useEffect(() => {
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('stoked_signals_seen') : null
+    if (stored) setSignalsSeenAt(stored)
+  }, [])
+  const markSignalsSeen = useCallback(() => {
+    const now = new Date().toISOString()
+    if (typeof window !== 'undefined') localStorage.setItem('stoked_signals_seen', now)
+    setSignalsSeenAt(now)
+  }, [])
+
   const refresh = useCallback(async () => {
     const d = await loadAppData()
     setData(d)
@@ -235,10 +252,10 @@ function LiveProvider({ children }: { children: ReactNode }) {
           const d = dataRef.current
           if (!d.groups.some((g) => g.id === row.group_id)) return // safety net
           if (d.signals.some((s) => s.id === row.id)) return // already have it
-          let signal: Signal = { ...row, author: d.profilesById[row.author_id] }
+          let signal: Signal = { ...row, author: d.profilesById[row.author_id], like_count: 0, acted_count: 0, i_liked: false, i_acted: false }
           if (!signal.author) {
             const fetched = await fetchSignal(row.id)
-            if (fetched) signal = fetched
+            if (fetched) signal = { ...fetched, like_count: 0, acted_count: 0, i_liked: false, i_acted: false }
           }
           setData((prev) =>
             prev.signals.some((s) => s.id === signal.id)
@@ -296,6 +313,30 @@ function LiveProvider({ children }: { children: ReactNode }) {
     }))
   }, [])
 
+  const toggleReaction = useCallback(async (signalId: string, kind: ReactionKind) => {
+    const current = dataRef.current.signals.find((x) => x.id === signalId)
+    if (!current) return
+    const wasOn = kind === 'like' ? !!current.i_liked : !!current.i_acted
+    const next = !wasOn
+    const apply = (on: boolean) =>
+      setData((prev) => ({
+        ...prev,
+        signals: prev.signals.map((x) => {
+          if (x.id !== signalId) return x
+          const delta = on ? 1 : -1
+          return kind === 'like'
+            ? { ...x, i_liked: on, like_count: Math.max(0, (x.like_count ?? 0) + delta) }
+            : { ...x, i_acted: on, acted_count: Math.max(0, (x.acted_count ?? 0) + delta) }
+        }),
+      }))
+    apply(next)
+    try {
+      await qToggleReaction(signalId, kind, next)
+    } catch {
+      apply(wasOn) // revert
+    }
+  }, [])
+
   const priceRows = useMemo(
     () => [...data.trades, ...data.watchlist],
     [data.trades, data.watchlist]
@@ -306,6 +347,9 @@ function LiveProvider({ children }: { children: ReactNode }) {
     postSignal,
     removeSignal,
     setSignalMute,
+    toggleReaction,
+    signalsSeenAt,
+    markSignalsSeen,
     toast,
     dismissToast,
   })
@@ -316,6 +360,9 @@ interface SignalExtras {
   postSignal: (input: SignalInput) => Promise<void>
   removeSignal: (id: string) => Promise<void>
   setSignalMute: (groupId: string, muted: boolean) => Promise<void>
+  toggleReaction: (signalId: string, kind: ReactionKind) => Promise<void>
+  signalsSeenAt: string
+  markSignalsSeen: () => void
   toast: ToastData | null
   dismissToast: () => void
 }
@@ -333,6 +380,11 @@ function useLiveValue(
 ): AppContextValue {
   const currentGroup = data.groups.find((g) => g.id === currentGroupId) ?? null
   const members = Object.values(data.profilesById)
+  const meId = data.profile?.id
+  const seen = new Date(extras.signalsSeenAt).getTime()
+  const newSignalCount = data.signals.filter(
+    (s) => s.author_id !== meId && new Date(s.created_at).getTime() > seen
+  ).length
 
   const wrap = <A extends unknown[]>(fn: (...a: A) => Promise<unknown>) =>
     async (...a: A) => {
@@ -391,6 +443,9 @@ function useLiveValue(
     postSignal: extras.postSignal,
     removeSignal: extras.removeSignal,
     setSignalMute: extras.setSignalMute,
+    toggleReaction: extras.toggleReaction,
+    newSignalCount,
+    markSignalsSeen: extras.markSignalsSeen,
     toast: extras.toast,
     dismissToast: extras.dismissToast,
     refresh,
@@ -468,6 +523,9 @@ function DevProvider({ children }: { children: ReactNode }) {
     postSignal: noop,
     removeSignal: noop,
     setSignalMute: noop,
+    toggleReaction: noop,
+    newSignalCount: 0,
+    markSignalsSeen: () => {},
     toast: null,
     dismissToast: () => {},
     refresh: noop,

@@ -7,6 +7,7 @@ import { formatCurrency, formatPercent } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
 import PnlBadge from '@/components/ui/PnlBadge'
 import EmptyGroup from '@/components/group/EmptyGroup'
+import InviteSheet from '@/components/group/InviteSheet'
 import PageHeader from '@/components/layout/PageHeader'
 import SignalsPanel from '@/components/signals/SignalsPanel'
 import { usePullToRefresh, PullIndicator } from '@/components/ui/PullToRefresh'
@@ -29,9 +30,8 @@ function GroupInner() {
   } = useApp()
   const router = useRouter()
   const params = useSearchParams()
-  const [tab, setTab] = useState<'leaderboard' | 'signals' | 'members' | 'invite'>('leaderboard')
-  const [origin, setOrigin] = useState('')
-  const [copied, setCopied] = useState(false)
+  const [tab, setTab] = useState<'leaderboard' | 'signals' | 'members'>('leaderboard')
+  const [inviteOpen, setInviteOpen] = useState(false)
 
   const handleRefresh = useCallback(async () => {
     await Promise.all([refresh(), new Promise((r) => setTimeout(r, 700))])
@@ -44,8 +44,6 @@ function GroupInner() {
     if (g) setCurrentGroupId(g)
     if (params.get('tab') === 'signals') setTab('signals')
   }, [params, setCurrentGroupId])
-
-  useEffect(() => setOrigin(window.location.origin), [])
 
   const groupMembers = useMemo(
     () => memberships.filter((m) => m.group_id === currentGroupId),
@@ -70,14 +68,6 @@ function GroupInner() {
 
   if (!currentGroup) return <EmptyGroup />
 
-  const inviteLink = origin ? `${origin}/join/${currentGroup.invite_code}` : ''
-
-  function copy(text: string) {
-    navigator.clipboard?.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
-
   return (
     <div className="mb-nav">
       <PageHeader
@@ -91,7 +81,7 @@ function GroupInner() {
         )}
         below={(
           <div style={{ display: 'flex' }}>
-            {[{ id: 'leaderboard', label: 'Ranks' }, { id: 'signals', label: 'Signals' }, { id: 'members', label: 'Members' }, { id: 'invite', label: 'Invite' }].map((t) => (
+            {[{ id: 'leaderboard', label: 'Ranks' }, { id: 'signals', label: 'Signals' }, { id: 'members', label: 'Members' }].map((t) => (
               <button key={t.id} onClick={() => setTab(t.id as typeof tab)}
                 style={{ flex: 1, padding: '9px 0 4px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: tab === t.id ? 700 : 500, color: tab === t.id ? 'var(--text-primary)' : 'var(--text-secondary)', borderBottom: tab === t.id ? '2px solid var(--green)' : '2px solid transparent', fontFamily: 'Satoshi, sans-serif' }}>
                 {t.label}
@@ -147,6 +137,10 @@ function GroupInner() {
       {/* Members */}
       {tab === 'members' && (
         <div style={{ padding: '16px 20px 0' }}>
+          <button onClick={() => setInviteOpen(true)} className="btn-primary" style={{ marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" /></svg>
+            Invite members
+          </button>
           {memberStats.map((ms) => (
             <Link key={ms.user.id} href={`/portfolio/${ms.user.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12, padding: '16px 0', borderBottom: '1px solid var(--border)' }}>
               <Avatar name={ms.user.name} userId={ms.user.id} size="md" />
@@ -177,33 +171,7 @@ function GroupInner() {
         </div>
       )}
 
-      {/* Invite */}
-      {tab === 'invite' && (
-        <div style={{ padding: '24px 20px 0' }}>
-          <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: 20, border: '1px solid var(--border)', marginBottom: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Secure invite link</div>
-            <div style={{ background: 'var(--bg-elevated)', borderRadius: 10, padding: '12px 14px', fontSize: 13, color: 'var(--text-secondary)', wordBreak: 'break-all', marginBottom: 12, border: '1px solid var(--border)' }}>
-              {inviteLink || 'Generating…'}
-            </div>
-            <button className="btn-primary" onClick={() => copy(inviteLink)} disabled={!inviteLink}>{copied ? 'Copied!' : 'Copy Invite Link'}</button>
-          </div>
-
-          <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: 20, border: '1px solid var(--border)', marginBottom: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Or share the code</div>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <code style={{ flex: 1, background: 'var(--bg-elevated)', borderRadius: 10, padding: '12px 14px', fontSize: 14, color: 'var(--gold)', wordBreak: 'break-all', border: '1px solid var(--border)' }}>{currentGroup.invite_code}</code>
-              <button className="btn-secondary" style={{ width: 'auto', padding: '12px 16px' }} onClick={() => copy(currentGroup.invite_code)}>Copy</button>
-            </div>
-          </div>
-
-          <button
-            onClick={() => { if (navigator.share && inviteLink) navigator.share({ title: 'Join me on STOKED', text: `Join our investing circle "${currentGroup.name}" on STOKED`, url: inviteLink }) }}
-            className="btn-secondary"
-          >
-            Share via WhatsApp / Other
-          </button>
-        </div>
-      )}
+      {inviteOpen && <InviteSheet group={currentGroup} onClose={() => setInviteOpen(false)} />}
     </div>
   )
 }

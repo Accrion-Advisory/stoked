@@ -13,6 +13,7 @@ import PageHeader from '@/components/layout/PageHeader'
 export default function DashboardPage() {
   const {
     user, groups, memberships, connections, profilesById, trades, prices, setCurrentGroupId,
+    signals, newSignalCount,
   } = useApp()
   const router = useRouter()
 
@@ -109,6 +110,30 @@ export default function DashboardPage() {
         </Link>
       </div>
 
+      {/* Signals at a glance */}
+      {signals.length > 0 && (
+        <Section title="Signals" badge={newSignalCount} action={{ label: 'Open', href: `/group?g=${signals[0].group_id}&tab=signals`, highlight: newSignalCount > 0 }}>
+          <div style={{ padding: '0 20px' }}>
+            {signals.slice(0, 4).map((s) => {
+              const author = profilesById[s.author_id]
+              const isBuy = s.action === 'BUY'
+              return (
+                <Link key={s.id} href={`/group?g=${s.group_id}&tab=signals`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 0', borderBottom: '1px solid var(--border)' }}>
+                  <span className="chip" style={{ background: isBuy ? 'var(--green-dim)' : 'var(--red-dim)', color: isBuy ? 'var(--green)' : 'var(--red)', fontWeight: 800 }}>{s.action}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <span style={{ fontWeight: 700 }}>{s.symbol}</span> <span style={{ color: 'var(--text-secondary)' }}>@ ₹{Number(s.price).toLocaleString('en-IN')}</span>
+                      {s.note ? <span style={{ color: 'var(--text-secondary)' }}> · {s.note}</span> : null}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{author?.name?.split(' ')[0] || 'Someone'} · {timeAgo(s.created_at)}</div>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        </Section>
+      )}
+
       {/* Groups at a glance */}
       <Section title="Groups" action={{ label: 'Manage', href: '/connect' }}>
         <div style={{ display: 'flex', gap: 12, overflowX: 'auto', padding: '2px 20px 4px', scrollSnapType: 'x proximity' }}>
@@ -194,11 +219,14 @@ export default function DashboardPage() {
   )
 }
 
-function Section({ title, action, children }: { title: string; action?: { label: string; href: string; highlight?: boolean }; children: React.ReactNode }) {
+function Section({ title, action, badge, children }: { title: string; action?: { label: string; href: string; highlight?: boolean }; badge?: number; children: React.ReactNode }) {
   return (
     <div style={{ marginTop: 24 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', marginBottom: 12 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.02em' }}>{title}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.02em' }}>{title}</span>
+          {badge ? <span style={{ background: 'var(--green)', color: '#04120A', fontSize: 11, fontWeight: 800, borderRadius: 999, minWidth: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>{badge} new</span> : null}
+        </div>
         {action && (
           <Link href={action.href} style={{ fontSize: 13, fontWeight: 600, textDecoration: 'none', color: action.highlight ? 'var(--green)' : 'var(--text-secondary)' }}>
             {action.label} →

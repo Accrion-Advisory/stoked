@@ -29,6 +29,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid signal' }, { status: 400 })
   }
 
+  // Rate limit: at most 30 signals/hour and one every ~8 seconds per user.
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+  const { count } = await supabase
+    .from('signals')
+    .select('id', { count: 'exact', head: true })
+    .eq('author_id', user.id)
+    .gte('created_at', oneHourAgo)
+  if ((count ?? 0) >= 30) {
+    return NextResponse.json({ error: "You've posted a lot of signals this hour — take a breather." }, { status: 429 })
+  }
+  const { data: last } = await supabase
+    .from('signals')
+    .select('created_at')
+    .eq('author_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (last && Date.now() - new Date(last.created_at).getTime() < 8000) {
+    return NextResponse.json({ error: 'Please wait a few seconds between signals.' }, { status: 429 })
+  }
+
   // Insert as the author — RLS enforces author = self AND group membership.
   const { data: signal, error } = await supabase
     .from('signals')

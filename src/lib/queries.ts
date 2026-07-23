@@ -4,6 +4,7 @@ import type {
   Group,
   Membership,
   Profile,
+  ReactionKind,
   Signal,
   SignalInput,
   Trade,
@@ -85,6 +86,24 @@ export async function loadAppData(): Promise<AppData> {
   const watchlist = (watchlistRes.data ?? []) as WatchlistItem[]
   const signals = (signalsRes.data ?? []) as Signal[]
   const mutedGroups = ((mutesRes.data ?? []) as { group_id: string }[]).map((m) => m.group_id)
+
+  // Reaction summary per signal.
+  if (signals.length) {
+    const { data: reactions } = await supabase
+      .from('signal_reactions')
+      .select('signal_id, user_id, kind')
+      .in('signal_id', signals.map((s) => s.id))
+    const byId = new Map(signals.map((s) => [s.id, s]))
+    for (const s of signals) {
+      s.like_count = 0; s.acted_count = 0; s.i_liked = false; s.i_acted = false
+    }
+    for (const r of (reactions ?? []) as { signal_id: string; user_id: string; kind: string }[]) {
+      const s = byId.get(r.signal_id)
+      if (!s) continue
+      if (r.kind === 'like') { s.like_count = (s.like_count ?? 0) + 1; if (r.user_id === user.id) s.i_liked = true }
+      else { s.acted_count = (s.acted_count ?? 0) + 1; if (r.user_id === user.id) s.i_acted = true }
+    }
+  }
 
   // Annotate connections from the current user's perspective.
   const connections: Connection[] = ((connectionsRes.data ?? []) as any[]).map((c) => {
@@ -348,4 +367,26 @@ export async function fetchSignal(id: string): Promise<Signal | null> {
   const supabase = createClient()
   const { data } = await supabase.from('signals').select('*, author:profiles(*)').eq('id', id).maybeSingle()
   return (data as Signal) ?? null
+}
+
+export async function toggleReaction(signalId: string, kind: ReactionKind, on: boolean) {
+  const supabase = createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+  if (on) {
+    const { error } = await supabase
+      .from('signal_reactions')
+      .upsert({ signal_id: signalId, user_id: user.id, kind }, { onConflict: 'signal_id,user_id,kind' })
+    if (error) throw error
+  } else {
+    const { error } = await supabase
+      .from('signal_reactions')
+      .delete()
+      .eq('signal_id', signalId)
+      .eq('user_id', user.id)
+      .eq('kind', kind)
+    if (error) throw error
+  }
 }

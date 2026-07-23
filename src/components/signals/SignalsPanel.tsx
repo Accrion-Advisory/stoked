@@ -8,7 +8,7 @@ import { enablePush, getSubscriptionState, type PushState } from '@/lib/push'
 import Link from 'next/link'
 
 export default function SignalsPanel({ groupId }: { groupId: string }) {
-  const { user, signals, profilesById, postSignal, removeSignal, mutedGroups, setSignalMute } = useApp()
+  const { user, signals, profilesById, postSignal, removeSignal, mutedGroups, setSignalMute, toggleReaction, markSignalsSeen } = useApp()
   const [composing, setComposing] = useState(false)
   const [pushState, setPushState] = useState<PushState>('default')
   const [enabling, setEnabling] = useState(false)
@@ -20,6 +20,8 @@ export default function SignalsPanel({ groupId }: { groupId: string }) {
   const muted = mutedGroups.includes(groupId)
 
   useEffect(() => { getSubscriptionState().then(setPushState) }, [])
+  // Viewing signals clears the "new" badge on Home (re-marks as they arrive too).
+  useEffect(() => { markSignalsSeen() }, [markSignalsSeen, groupSignals.length])
 
   async function handleEnable() {
     setEnabling(true)
@@ -86,7 +88,15 @@ export default function SignalsPanel({ groupId }: { groupId: string }) {
                   <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>@ ₹{Number(s.price).toLocaleString('en-IN')}</span>
                 </div>
                 {s.note && <div style={{ fontSize: 13.5, color: 'var(--text-primary)', marginTop: 5, lineHeight: 1.45 }}>{s.note}</div>}
-                <div style={{ fontSize: 11.5, color: 'var(--text-tertiary)', marginTop: 5 }}>
+                <div style={{ display: 'flex', gap: 8, marginTop: 9 }}>
+                  <button onClick={() => toggleReaction(s.id, 'like')} style={reactionBtn(!!s.i_liked)}>
+                    👍 {s.like_count ? s.like_count : ''}
+                  </button>
+                  <button onClick={() => toggleReaction(s.id, 'acted')} style={reactionBtn(!!s.i_acted, true)}>
+                    {s.i_acted ? '✓ Acted' : 'Acted?'}{s.acted_count ? ` · ${s.acted_count}` : ''}
+                  </button>
+                </div>
+                <div style={{ fontSize: 11.5, color: 'var(--text-tertiary)', marginTop: 7 }}>
                   {author?.name || 'Someone'} · {timeAgo(s.created_at)}
                   {mine && (
                     <button onClick={() => removeSignal(s.id)} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', marginLeft: 10, fontSize: 11.5, textDecoration: 'underline', padding: 0 }}>delete</button>
@@ -102,3 +112,18 @@ export default function SignalsPanel({ groupId }: { groupId: string }) {
     </div>
   )
 }
+
+const reactionBtn = (active: boolean, acted = false): React.CSSProperties => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 5,
+  padding: '5px 12px',
+  borderRadius: 999,
+  fontSize: 12.5,
+  fontWeight: 700,
+  cursor: 'pointer',
+  fontFamily: 'Satoshi, sans-serif',
+  border: `1px solid ${active ? (acted ? 'var(--green)' : 'var(--blue)') : 'var(--border-strong)'}`,
+  background: active ? (acted ? 'var(--green-dim)' : 'var(--blue-dim)') : 'transparent',
+  color: active ? (acted ? 'var(--green)' : 'var(--blue)') : 'var(--text-secondary)',
+})
