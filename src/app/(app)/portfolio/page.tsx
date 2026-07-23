@@ -7,12 +7,18 @@ import Avatar from '@/components/ui/Avatar'
 import PnlBadge from '@/components/ui/PnlBadge'
 import HoldingRow from '@/components/portfolio/HoldingRow'
 import TradeActionsSheet from '@/components/portfolio/TradeActionsSheet'
+import PullToRefresh from '@/components/ui/PullToRefresh'
 import Link from 'next/link'
 import { Holding } from '@/types'
 
 export default function PortfolioPage() {
-  const { user, trades, prices, removeTrades } = useApp()
+  const { user, trades, prices, removeTrades, refreshPrices } = useApp()
   const [sheet, setSheet] = useState<Holding | null>(null)
+
+  async function handleRefresh() {
+    // Keep the animation visible for a beat so the refresh feels substantial.
+    await Promise.all([refreshPrices(), new Promise((r) => setTimeout(r, 700))])
+  }
 
   const myTrades = useMemo(() => trades.filter((t) => t.user_id === user?.id), [trades, user?.id])
   const p = useMemo(
@@ -30,7 +36,8 @@ export default function PortfolioPage() {
   }
 
   return (
-    <div className="mb-nav">
+    <div className="mb-nav" style={{ position: 'relative' }}>
+     <PullToRefresh onRefresh={handleRefresh}>
       {/* Header */}
       <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 44px) 20px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
@@ -119,6 +126,7 @@ export default function PortfolioPage() {
           </div>
         </div>
       )}
+     </PullToRefresh>
 
       {sheet && <TradeActionsSheet holding={sheet} onClose={() => setSheet(null)} />}
     </div>

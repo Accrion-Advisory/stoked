@@ -61,6 +61,8 @@ interface AppContextValue extends AppData {
   prices: PriceMap
   // Load quotes for extra symbols on demand (e.g. the stock detail page).
   requestSymbols: (pairs: Pair[]) => void
+  // Force-refresh quotes for everything in view (pull-to-refresh).
+  refreshPrices: () => Promise<void>
   // Mutations
   addTrade: (t: Omit<Trade, 'id' | 'created_at' | 'user'>) => Promise<void>
   updateTrade: (id: string, patch: TradePatch) => Promise<void>
@@ -135,7 +137,9 @@ function usePriceEngine(neededRows: Pair[]) {
     fetchPrices(pairs).then((m) => setPrices({ ...m }))
   }, [])
 
-  return { prices, requestSymbols }
+  const refreshPrices = useCallback(() => load(true), [load])
+
+  return { prices, requestSymbols, refreshPrices }
 }
 
 // ---------------------------------------------------------------------------
@@ -182,9 +186,9 @@ function LiveProvider({ children }: { children: ReactNode }) {
     () => [...data.trades, ...data.watchlist],
     [data.trades, data.watchlist]
   )
-  const { prices, requestSymbols } = usePriceEngine(priceRows)
+  const { prices, requestSymbols, refreshPrices } = usePriceEngine(priceRows)
 
-  const value = useLiveValue(data, loading, currentGroupId, setCurrentGroupId, prices, requestSymbols, refresh)
+  const value = useLiveValue(data, loading, currentGroupId, setCurrentGroupId, prices, requestSymbols, refreshPrices, refresh)
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 
@@ -195,6 +199,7 @@ function useLiveValue(
   setCurrentGroupId: (id: string | null) => void,
   prices: PriceMap,
   requestSymbols: (pairs: Pair[]) => void,
+  refreshPrices: () => Promise<void>,
   refresh: () => Promise<void>
 ): AppContextValue {
   const currentGroup = data.groups.find((g) => g.id === currentGroupId) ?? null
@@ -218,6 +223,7 @@ function useLiveValue(
     setCurrentGroupId,
     prices,
     requestSymbols,
+    refreshPrices,
     addTrade: wrap((t: Omit<Trade, 'id' | 'created_at' | 'user'>) => insertTrade(t)),
     updateTrade: wrap((id: string, patch: TradePatch) => qUpdateTrade(id, patch)),
     removeTrade: wrap((id: string) => qDeleteTrade(id)),
@@ -271,7 +277,7 @@ function DevProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const profile = DEV_USERS.find((u) => u.id === userId) ?? null
-  const { prices, requestSymbols } = usePriceEngine(useMemo(() => [...trades, ...watchlist], [trades, watchlist]))
+  const { prices, requestSymbols, refreshPrices } = usePriceEngine(useMemo(() => [...trades, ...watchlist], [trades, watchlist]))
 
   const profilesById = useMemo(() => {
     const m: Record<string, Profile> = {}
@@ -299,6 +305,7 @@ function DevProvider({ children }: { children: ReactNode }) {
     setCurrentGroupId: () => {},
     prices,
     requestSymbols,
+    refreshPrices,
     addTrade: async (t) => {
       setTrades((prev) => [
         ...prev,

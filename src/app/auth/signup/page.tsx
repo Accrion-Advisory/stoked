@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { signup } from '@/app/auth/actions'
 import { AccrionBadge } from '@/components/brand/AccrionBadge'
+import { StokedMark } from '@/components/brand/StokedLogo'
 
 export default function SignupPage() {
   return (
@@ -20,8 +21,9 @@ function SignupInner() {
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 24px' }}>
-      <div style={{ textAlign: 'center', marginBottom: 36 }}>
-        <div style={{ fontSize: 40, fontWeight: 900, letterSpacing: '-0.02em', marginBottom: 6 }}>
+      <div style={{ textAlign: 'center', marginBottom: 30 }}>
+        <StokedMark size={52} style={{ margin: '0 auto 14px' }} />
+        <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: '-0.02em', marginBottom: 6 }}>
           <span style={{ color: 'var(--text-primary)' }}>ST</span>
           <span style={{ color: 'var(--green)' }}>O</span>
           <span style={{ color: 'var(--text-primary)' }}>KED</span>

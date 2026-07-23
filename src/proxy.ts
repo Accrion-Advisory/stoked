@@ -18,7 +18,9 @@ export async function proxy(request: NextRequest) {
 
   const { response, user } = await updateSession(request)
 
-  const isPublic = PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))
+  // The marketing landing page ('/') is public; the root page component itself
+  // redirects already-authenticated users to /dashboard.
+  const isPublic = pathname === '/' || PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))
   const isApi = pathname.startsWith('/api')
 
   // Unauthenticated + protected page → send to login, remembering where they

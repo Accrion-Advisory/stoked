@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { login } from '@/app/auth/actions'
 import { AccrionBadge } from '@/components/brand/AccrionBadge'
+import { StokedMark } from '@/components/brand/StokedLogo'
 
 export default function LoginPage() {
   return (
@@ -22,7 +23,8 @@ function LoginInner() {
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ textAlign: 'center', marginBottom: 40 }}>
-        <div style={{ fontSize: 40, fontWeight: 900, letterSpacing: '-0.02em', marginBottom: 6 }}>
+        <StokedMark size={56} style={{ margin: '0 auto 16px' }} />
+        <div style={{ fontSize: 34, fontWeight: 900, letterSpacing: '-0.02em', marginBottom: 6 }}>
           <span style={{ color: 'var(--text-primary)' }}>ST</span>
           <span style={{ color: 'var(--green)' }}>O</span>
           <span style={{ color: 'var(--text-primary)' }}>KED</span>

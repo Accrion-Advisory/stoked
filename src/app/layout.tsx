@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   publisher: 'Accrion',
   manifest: '/manifest.json',
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'STOKED' },
-  icons: { icon: '/icons/icon-192.png', apple: '/icons/apple-touch-icon.png' },
+  // favicon.ico and apple-icon.png in src/app are picked up automatically.
   openGraph: {
     title: 'STOKED',
     description: 'Private investing circles for serious retail investors. A product of Accrion.',

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useApp } from '@/lib/context'
 import { groupPreview } from '@/lib/queries'
+import { LogoLoader } from '@/components/brand/StokedLogo'
 
 export default function JoinGroupPage() {
   const { code } = useParams<{ code: string }>()
@@ -39,7 +40,7 @@ export default function JoinGroupPage() {
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 32px', textAlign: 'center' }}>
-      {status === 'loading' && <div className="spinner" />}
+      {status === 'loading' && <LogoLoader />}
 
       {status === 'invalid' && (
         <>
